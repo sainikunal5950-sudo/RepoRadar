@@ -159,12 +159,67 @@ Follow these steps to get RepoRadar running locally on your machine.
 
 ---
 
-## 🔌 API Endpoints (Module 0)
+## 🔌 API Endpoints & Architecture (Module 1)
 
-| Method | Endpoint | Description |
-|---|---|---|
-| `GET` | `/api/health` | Service health status and timestamp |
-| `GET` | `/` | API server info |
+The backend follows a strict layered REST API architecture pattern:
+```
+Routes (URL Mapping) → Controllers (Req/Res + Helpers) → Services (Business Logic) → Prisma Client → MongoDB
+```
+
+### Response Formats
+
+All API endpoints return predictable and standardized JSON responses:
+
+#### ✅ Success Response (`200 OK` / `201 Created`)
+```json
+{
+  "success": true,
+  "data": {
+    "id": "65d75cf9e1d84f23b890abcd",
+    "name": "RepoRadar Core Engine",
+    "description": "AI-powered AST static analysis and vulnerability scanning pipeline",
+    "createdAt": "2026-08-24T06:00:00.000Z",
+    "updatedAt": "2026-08-24T06:00:00.000Z"
+  }
+}
+```
+
+#### ❌ Error Response (`400 Bad Request` / `404 Not Found` / `500 Internal Error`)
+```json
+{
+  "success": false,
+  "error": {
+    "message": "Invalid Project ID format (must be 24-character hex MongoDB ObjectId)",
+    "code": "VALIDATION_ERROR",
+    "details": [
+      {
+        "field": "id",
+        "message": "Invalid Project ID format (must be 24-character hex MongoDB ObjectId)"
+      }
+    ]
+  }
+}
+```
+
+---
+
+### Endpoints Table
+
+| Method | Endpoint | Description | Request Body | Response Status |
+|---|---|---|---|---|
+| `GET` | `/` | API server info and links | None | `200 OK` |
+| `GET` | `/api/health` | Service health status & uptime | None | `200 OK` |
+| `GET` | `/api/projects` | List all projects (newest first) | None | `200 OK` |
+| `POST` | `/api/projects` | Create a new project | `{ "name": string, "description"?: string }` | `201 Created` |
+| `GET` | `/api/projects/:id` | Get project by 24-char ObjectId | None | `200 OK` / `404 Not Found` |
+| `PATCH` | `/api/projects/:id` | Update project fields | `{ "name"?: string, "description"?: string }` | `200 OK` / `404 Not Found` |
+| `DELETE` | `/api/projects/:id` | Delete project by ID | None | `200 OK` / `404 Not Found` |
+
+---
+
+### 🧪 Testing the API
+
+A complete REST test suite is included in [`server/requests.http`](file:///c:/Users/ASUS/OneDrive/Desktop/BEE/server/requests.http). You can execute all endpoints and error cases directly using the VS Code **REST Client** extension, Postman, or `curl`.
 
 ---
 
@@ -182,7 +237,7 @@ The frontend implements a dark monochrome aesthetic inspired by Vercel, Linear, 
 ## 📜 Roadmap
 
 - [x] **Module 0:** Foundation Setup (Monorepo structure, Next.js client, Express + MongoDB + Prisma backend, Dark design system, Health checks).
-- [ ] **Module 1:** Core Repository Ingestion & Static AST Analysis Engines.
+- [x] **Module 1:** Scalable Backend REST API Architecture (Layered Routes → Controllers → Services → Prisma, Centralized Error Handling, Zod Validation, Request Logging, Project Template Resource).
 - [ ] **Module 2:** NextAuth.js GitHub OAuth Authentication & Session Management.
 - [ ] **Module 3:** AI-Powered Vulnerability Radar & Automated Health Scorecard.
 - [ ] **Module 4:** Interactive Dashboard, Real-Time Webhooks & Notifications.

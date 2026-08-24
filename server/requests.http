@@ -1,0 +1,94 @@
+### ====================================================================
+### RepoRadar Server REST API - Test Requests (Module 1)
+### Use with VS Code REST Client extension, Postman, or curl
+### ====================================================================
+
+@baseUrl = http://localhost:5000
+@projectId = 65d75cf9e1d84f23b890abcd
+
+### 1. Server Root Info
+GET {{baseUrl}}/
+Accept: application/json
+
+### 2. Health Check
+GET {{baseUrl}}/api/health
+Accept: application/json
+
+### 3. Create Project - Success
+# @name createProject
+POST {{baseUrl}}/api/projects
+Content-Type: application/json
+
+{
+  "name": "RepoRadar Core Engine",
+  "description": "AI-powered AST static analysis and vulnerability scanning pipeline"
+}
+
+### 4. Create Project 2 (Additional test project)
+POST {{baseUrl}}/api/projects
+Content-Type: application/json
+
+{
+  "name": "Next.js Web Client",
+  "description": "Interactive dark-mode radar dashboard and telemetry frontend"
+}
+
+### 5. List All Projects
+GET {{baseUrl}}/api/projects
+Accept: application/json
+
+### 6. Get Project By ID
+# Replace with an actual ID returned from the createProject request above
+GET {{baseUrl}}/api/projects/{{projectId}}
+Accept: application/json
+
+### 7. Update Project - Success (Update name and description)
+PATCH {{baseUrl}}/api/projects/{{projectId}}
+Content-Type: application/json
+
+{
+  "name": "RepoRadar Core Engine (Updated v1.1)",
+  "description": "Updated description with enhanced multi-language AST support"
+}
+
+### 8. Update Project - Partial (Update description only)
+PATCH {{baseUrl}}/api/projects/{{projectId}}
+Content-Type: application/json
+
+{
+  "description": "Updated description only"
+}
+
+### 9. Delete Project
+DELETE {{baseUrl}}/api/projects/{{projectId}}
+Accept: application/json
+
+### ====================================================================
+### Validation & Error Handling Test Cases
+### ====================================================================
+
+### 10. Validation Error: Create Project with missing name (Expect 400)
+POST {{baseUrl}}/api/projects
+Content-Type: application/json
+
+{
+  "description": "Project without a name"
+}
+
+### 11. Validation Error: Invalid MongoDB ObjectId in URL (Expect 400)
+GET {{baseUrl}}/api/projects/invalid-mongo-id-123
+Accept: application/json
+
+### 12. Validation Error: Update Project with empty body (Expect 400)
+PATCH {{baseUrl}}/api/projects/65d75cf9e1d84f23b890abcd
+Content-Type: application/json
+
+{}
+
+### 13. Not Found Error: Get Non-Existent Project (Expect 404)
+GET {{baseUrl}}/api/projects/65d75cf9e1d84f23b890abce
+Accept: application/json
+
+### 14. 404 Error: Non-Existent Route (Expect 404)
+GET {{baseUrl}}/api/unknown-endpoint
+Accept: application/json

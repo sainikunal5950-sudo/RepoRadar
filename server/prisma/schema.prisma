@@ -10,4 +10,11 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Base schema for Module 0 - Models will be added in Module 1+
+// Base schema for Module 0 - Models added in Module 1
+model Project {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
