@@ -17,11 +17,23 @@ export interface AuthUserPayload {
   id: string;
   name: string;
   email: string;
+  github_id?: number | null;
+  github_username?: string | null;
 }
 
 export interface AuthResponse {
   user: AuthUserPayload;
   token: string;
+}
+
+export interface UserResponse {
+  id: string;
+  name: string;
+  email: string;
+  github_id: number | null;
+  github_username: string | null;
+  createdAt: Date | string;
+  updatedAt: Date | string;
 }
 
 declare global {

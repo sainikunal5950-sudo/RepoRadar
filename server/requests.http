@@ -1,12 +1,12 @@
 ### ====================================================================
-### RepoRadar Server REST API - Test Requests (Module 2: Auth + Protected CRUD)
+### RepoRadar Server REST API - Test Requests (Module 3: GitHub OAuth + Sync)
 ### Use with VS Code REST Client extension, Postman, or curl
 ### ====================================================================
 
 @baseUrl = http://localhost:5000
 @projectId = 65d75cf9e1d84f23b890abcd
 
-# Set this after calling POST /api/auth/login
+# Set this after calling POST /api/auth/login or POST /api/users/sync-github
 @authToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
 ### 1. Server Root Info
@@ -18,10 +18,10 @@ GET {{baseUrl}}/api/health
 Accept: application/json
 
 ### ====================================================================
-### Authentication Endpoints (Module 2)
+### Authentication & User Sync Endpoints (Module 2 & 3)
 ### ====================================================================
 
-### 3. Register a New User
+### 3. Register a New User (Email + Password)
 # @name registerUser
 POST {{baseUrl}}/api/auth/register
 Content-Type: application/json
@@ -42,7 +42,20 @@ Content-Type: application/json
   "password": "securepassword123"
 }
 
-### 5. Get Current User Profile (Protected with Bearer Token)
+### 5. Synchronize User via GitHub OAuth (Called by NextAuth signIn callback)
+# @name syncGithubUser
+POST {{baseUrl}}/api/users/sync-github
+Content-Type: application/json
+
+{
+  "email": "kunal.github@reporadar.io",
+  "name": "Kunal Saini",
+  "github_id": 12345678,
+  "github_username": "sainikunal5950-sudo",
+  "github_access_token": "gho_sampleGithubAccessTokenSecret123456"
+}
+
+### 6. Get Current User Profile (Protected with Bearer Token)
 GET {{baseUrl}}/api/auth/me
 Authorization: Bearer {{authToken}}
 Accept: application/json
@@ -51,7 +64,7 @@ Accept: application/json
 ### Protected Project Resource Endpoints (Requires Authorization Header)
 ### ====================================================================
 
-### 6. Create Project - Success (Protected)
+### 7. Create Project - Success (Protected)
 # @name createProject
 POST {{baseUrl}}/api/projects
 Authorization: Bearer {{authToken}}
@@ -62,27 +75,27 @@ Content-Type: application/json
   "description": "AI-powered AST static analysis and vulnerability scanning pipeline"
 }
 
-### 7. List All Projects (Protected)
+### 8. List All Projects (Protected)
 GET {{baseUrl}}/api/projects
 Authorization: Bearer {{authToken}}
 Accept: application/json
 
-### 8. Get Project By ID (Protected)
+### 9. Get Project By ID (Protected)
 GET {{baseUrl}}/api/projects/{{projectId}}
 Authorization: Bearer {{authToken}}
 Accept: application/json
 
-### 9. Update Project (Protected)
+### 10. Update Project (Protected)
 PATCH {{baseUrl}}/api/projects/{{projectId}}
 Authorization: Bearer {{authToken}}
 Content-Type: application/json
 
 {
-  "name": "RepoRadar Core Engine (Updated v1.2)",
+  "name": "RepoRadar Core Engine (Updated v1.3)",
   "description": "Updated description with enhanced multi-language AST support"
 }
 
-### 10. Delete Project (Protected)
+### 11. Delete Project (Protected)
 DELETE {{baseUrl}}/api/projects/{{projectId}}
 Authorization: Bearer {{authToken}}
 Accept: application/json
@@ -91,16 +104,16 @@ Accept: application/json
 ### Validation & Auth Error Test Cases
 ### ====================================================================
 
-### 11. Auth Error: Call Protected Endpoint without Token (Expect 401)
+### 12. Auth Error: Call Protected Endpoint without Token (Expect 401)
 GET {{baseUrl}}/api/projects
 Accept: application/json
 
-### 12. Auth Error: Call Protected Endpoint with Invalid Token (Expect 401)
+### 13. Auth Error: Call Protected Endpoint with Invalid Token (Expect 401)
 GET {{baseUrl}}/api/projects
 Authorization: Bearer invalid-token-12345
 Accept: application/json
 
-### 13. Auth Error: Login with Wrong Password (Expect 401)
+### 14. Auth Error: Login with Wrong Password (Expect 401)
 POST {{baseUrl}}/api/auth/login
 Content-Type: application/json
 
@@ -109,7 +122,7 @@ Content-Type: application/json
   "password": "wrongpassword"
 }
 
-### 14. Validation Error: Register with short password (Expect 400)
+### 15. Validation Error: Register with short password (Expect 400)
 POST {{baseUrl}}/api/auth/register
 Content-Type: application/json
 
@@ -117,4 +130,13 @@ Content-Type: application/json
   "name": "Test User",
   "email": "test@reporadar.io",
   "password": "123"
+}
+
+### 16. Validation Error: Sync GitHub missing github_id (Expect 400)
+POST {{baseUrl}}/api/users/sync-github
+Content-Type: application/json
+
+{
+  "email": "invalid@reporadar.io",
+  "name": "Invalid User"
 }

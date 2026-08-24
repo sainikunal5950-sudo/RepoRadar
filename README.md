@@ -159,15 +159,17 @@ Follow these steps to get RepoRadar running locally on your machine.
 
 ---
 
-## 🔐 Authentication Architecture (Module 2)
+## 🔐 Authentication Architecture (Module 2 & 3)
 
-RepoRadar uses a decoupled authentication architecture between the Next.js frontend and Express backend:
+RepoRadar supports dual authentication methods: **Credentials (Email/Password)** and **GitHub OAuth Single Sign-On (SSO)** with secure token encryption:
 
 ```
 ┌─────────────────────────┐                   ┌──────────────────────────┐
 │  Next.js 14+ (Client)   │                   │  Express + Node (Server) │
 │                         │                   │                          │
-│  NextAuth Credentials   │── POST /login ───▶│  Verify email + bcrypt   │
+│  NextAuth Providers:    │                   │                          │
+│  - Credentials (Email)  │── POST /login ───▶│  Verify email + bcrypt   │
+│  - GitHub OAuth (SSO)   │── POST /sync ────▶│  AES-256 Encrypt Access  │
 │  Strategy: "jwt"        │◀─ User + JWT ─────│  Sign JWT (Shared Secret)│
 │                         │                   │                          │
 │  apiClient helper       │── Bearer Token ──▶│  authMiddleware verifies │
@@ -175,28 +177,51 @@ RepoRadar uses a decoupled authentication architecture between the Next.js front
 └─────────────────────────┘                   └──────────────────────────┘
 ```
 
-### Shared Secret Setup
-Both client and server must share the exact same `NEXTAUTH_SECRET` / `JWT_SECRET` key to sign and verify tokens seamlessly.
+### GitHub OAuth App Setup
+To enable GitHub login in local development:
+1. Go to **GitHub Settings → Developer Settings → OAuth Apps → New OAuth App**.
+2. Set **Application Name**: `RepoRadar`
+3. Set **Homepage URL**: `http://localhost:3000`
+4. Set **Authorization callback URL**: `http://localhost:3000/api/auth/callback/github`
+5. Copy the generated **Client ID** and generate a **Client Secret**.
 
-Generate a secure 256-bit key:
-```bash
-openssl rand -base64 32
+Add to `client/.env.local` and `server/.env`:
+```env
+GITHUB_CLIENT_ID="your_github_client_id"
+GITHUB_CLIENT_SECRET="your_github_client_secret"
 ```
+
+### Secrets & Encryption Keys Setup
+1. **Shared NextAuth JWT Secret**:
+   ```bash
+   openssl rand -base64 32
+   ```
+2. **AES-256 Token Encryption Key** (Used on server to encrypt GitHub access tokens at rest):
+   ```bash
+   openssl rand -hex 16
+   ```
+
 Add to `client/.env.local`:
 ```env
-NEXTAUTH_SECRET="your-generated-secret-key"
+NEXTAUTH_SECRET="your-generated-jwt-secret"
 NEXTAUTH_URL="http://localhost:3000"
 NEXT_PUBLIC_API_URL="http://localhost:5000"
+GITHUB_CLIENT_ID="your_github_client_id"
+GITHUB_CLIENT_SECRET="your_github_client_secret"
 ```
+
 Add to `server/.env`:
 ```env
-JWT_SECRET="your-generated-secret-key"
-NEXTAUTH_SECRET="your-generated-secret-key"
+JWT_SECRET="your-generated-jwt-secret"
+NEXTAUTH_SECRET="your-generated-jwt-secret"
+ENCRYPTION_KEY="your-32-character-hex-encryption-key"
+GITHUB_CLIENT_ID="your_github_client_id"
+GITHUB_CLIENT_SECRET="your_github_client_secret"
 ```
 
 ---
 
-## 🔌 API Endpoints (Module 2)
+## 🔌 API Endpoints (Module 3)
 
 ### Response Formats
 
@@ -210,7 +235,9 @@ All API endpoints return standardized JSON responses:
     "user": {
       "id": "65d75cf9e1d84f23b890abcd",
       "name": "Kunal Saini",
-      "email": "kunal@reporadar.io"
+      "email": "kunal@reporadar.io",
+      "github_id": 12345678,
+      "github_username": "sainikunal5950-sudo"
     },
     "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
   }
@@ -238,6 +265,7 @@ All API endpoints return standardized JSON responses:
 | `GET` | `/api/health` | No | Service health status & uptime | None |
 | `POST` | `/api/auth/register` | No | Register new developer account | `{ "name": string, "email": string, "password": string }` |
 | `POST` | `/api/auth/login` | No | Verify credentials & issue JWT token | `{ "email": string, "password": string }` |
+| `POST` | `/api/users/sync-github` | No (NextAuth Callback) | Sync GitHub profile & encrypt access token | `{ "email": string, "name"?: string, "github_id": number, "github_username"?: string, "github_access_token"?: string }` |
 | `GET` | `/api/auth/me` | **Yes (Bearer)** | Get current authenticated user | None |
 | `GET` | `/api/projects` | **Yes (Bearer)** | List all projects | None |
 | `POST` | `/api/projects` | **Yes (Bearer)** | Create a new project | `{ "name": string, "description"?: string }` |
@@ -249,7 +277,7 @@ All API endpoints return standardized JSON responses:
 
 ### 🧪 Testing the API
 
-A complete REST test suite is included in [`server/requests.http`](file:///c:/Users/ASUS/OneDrive/Desktop/BEE/server/requests.http). You can execute authentication, token generation, protected calls, and error edge cases using the VS Code **REST Client** extension, Postman, or `curl`.
+A complete REST test suite is included in [`server/requests.http`](file:///c:/Users/ASUS/OneDrive/Desktop/BEE/server/requests.http). You can execute authentication, GitHub OAuth user sync, token generation, protected calls, and error edge cases using the VS Code **REST Client** extension, Postman, or `curl`.
 
 ---
 
@@ -269,8 +297,9 @@ The frontend implements a dark monochrome aesthetic inspired by Vercel, Linear, 
 - [x] **Module 0:** Foundation Setup (Monorepo structure, Next.js client, Express + MongoDB + Prisma backend, Dark design system, Health checks).
 - [x] **Module 1:** Scalable Backend REST API Architecture (Layered Routes → Controllers → Services → Prisma, Centralized Error Handling, Zod Validation, Request Logging, Project Template Resource).
 - [x] **Module 2:** NextAuth.js Authentication & JWT Session Sharing (Credentials provider, Login/Register pages, Dashboard protection, Server bcrypt + JWT verification, Protected routes).
-- [ ] **Module 3:** GitHub OAuth Integration & AI-Powered Static AST Analysis Engine.
-- [ ] **Module 4:** Vulnerability Radar Scorecard, Interactive Telemetry & Webhooks.
+- [x] **Module 3:** GitHub OAuth Integration & AES-256 Token Encryption (GithubProvider, OAuth callback user sync, encrypted access token storage at rest, session GitHub telemetry).
+- [ ] **Module 4:** Repository Ingestion, Octokit API Client & Static AST Analysis Engine.
+- [ ] **Module 5:** AI-Powered Vulnerability Radar Scorecard & Interactive Dashboard.
 
 ---
 

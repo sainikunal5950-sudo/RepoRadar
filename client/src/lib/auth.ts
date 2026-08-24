@@ -1,5 +1,6 @@
 import { NextAuthOptions, getServerSession } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
+import GithubProvider from "next-auth/providers/github";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
@@ -13,6 +14,15 @@ export const authOptions: NextAuthOptions = {
   },
   secret: process.env.NEXTAUTH_SECRET,
   providers: [
+    GithubProvider({
+      clientId: process.env.GITHUB_CLIENT_ID || "",
+      clientSecret: process.env.GITHUB_CLIENT_SECRET || "",
+      authorization: {
+        params: {
+          scope: "read:user user:email repo",
+        },
+      },
+    }),
     CredentialsProvider({
       name: "credentials",
       credentials: {
@@ -58,12 +68,65 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
+    async signIn({ user, account, profile }) {
+      // If logging in via GitHub OAuth, synchronize user and encrypted token with backend
+      if (account?.provider === "github") {
+        try {
+          const githubId = profile?.id ? Number(profile.id) : Number(account.providerAccountId);
+          const githubUsername = (profile as { login?: string })?.login || user.name || "github-user";
+          const email = user.email || (profile as { email?: string })?.email;
+
+          if (!email) {
+            console.error("GitHub OAuth Error: No email provided by GitHub account");
+            return false;
+          }
+
+          const res = await fetch(`${API_URL}/api/users/sync-github`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              email,
+              name: user.name || githubUsername,
+              github_id: githubId,
+              github_username: githubUsername,
+              github_access_token: account.access_token,
+            }),
+          });
+
+          const json = await res.json();
+
+          if (!res.ok || !json.success) {
+            console.error("Failed to sync GitHub user with backend:", json.error);
+            return false;
+          }
+
+          // Populate user object with backend ID, JWT token, and GitHub attributes
+          user.id = json.data.user.id;
+          user.name = json.data.user.name;
+          user.email = json.data.user.email;
+          user.accessToken = json.data.token;
+          user.github_id = json.data.user.github_id;
+          user.github_username = json.data.user.github_username;
+
+          return true;
+        } catch (error) {
+          console.error("Error during GitHub OAuth synchronization:", error);
+          return false;
+        }
+      }
+
+      return true;
+    },
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
         token.name = user.name;
         token.email = user.email;
         token.accessToken = user.accessToken;
+        token.github_id = user.github_id;
+        token.github_username = user.github_username;
       }
       return token;
     },
@@ -73,6 +136,8 @@ export const authOptions: NextAuthOptions = {
         session.user.name = token.name;
         session.user.email = token.email;
         session.user.accessToken = token.accessToken;
+        session.user.github_id = token.github_id;
+        session.user.github_username = token.github_username;
       }
       session.accessToken = token.accessToken;
       return session;

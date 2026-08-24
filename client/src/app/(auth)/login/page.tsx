@@ -4,17 +4,21 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
-import { Radio, ArrowRight, Lock, Mail, AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
+import { Radio, ArrowRight, Lock, Mail, AlertCircle, CheckCircle2, Loader2, Github } from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const registered = searchParams.get("registered");
+  const authError = searchParams.get("error");
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(
+    authError ? "Failed to authenticate with GitHub. Please try again." : null
+  );
   const [isLoading, setIsLoading] = useState(false);
+  const [isGithubLoading, setIsGithubLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,6 +44,12 @@ export default function LoginPage() {
       setError("An unexpected error occurred during sign in. Please try again.");
       setIsLoading(false);
     }
+  };
+
+  const handleGithubSignIn = () => {
+    setError(null);
+    setIsGithubLoading(true);
+    signIn("github", { callbackUrl: "/dashboard" });
   };
 
   return (
@@ -94,6 +104,38 @@ export default function LoginPage() {
               <span>{error}</span>
             </div>
           )}
+
+          {/* GitHub OAuth Button */}
+          <div>
+            <button
+              type="button"
+              onClick={handleGithubSignIn}
+              disabled={isGithubLoading || isLoading}
+              className="w-full flex items-center justify-center gap-3 py-3 px-4 rounded-xl bg-white text-black font-semibold text-sm hover:bg-neutral-200 transition-all duration-200 shadow-md hover:shadow-[0_0_20px_rgba(255,255,255,0.3)] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+            >
+              {isGithubLoading ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Connecting to GitHub...</span>
+                </>
+              ) : (
+                <>
+                  <Github className="w-4 h-4" />
+                  <span>Continue with GitHub</span>
+                </>
+              )}
+            </button>
+          </div>
+
+          {/* Divider */}
+          <div className="relative my-6">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-[#262626]" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase font-mono">
+              <span className="bg-[#111111] px-3 text-neutral-500">Or continue with email</span>
+            </div>
+          </div>
 
           <form className="space-y-5" onSubmit={handleSubmit}>
             {/* Email Field */}
@@ -154,8 +196,8 @@ export default function LoginPage() {
             <div className="pt-2">
               <button
                 type="submit"
-                disabled={isLoading}
-                className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-white text-black font-semibold text-sm hover:bg-neutral-200 transition-all duration-200 shadow-md hover:shadow-[0_0_20px_rgba(255,255,255,0.3)] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                disabled={isLoading || isGithubLoading}
+                className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-[#181818] hover:bg-[#222222] border border-[#333333] hover:border-neutral-500 text-white font-medium text-sm transition-all duration-200 shadow-md disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
               >
                 {isLoading ? (
                   <>
@@ -164,7 +206,7 @@ export default function LoginPage() {
                   </>
                 ) : (
                   <>
-                    <span>Sign In</span>
+                    <span>Sign In with Password</span>
                     <ArrowRight className="w-4 h-4" />
                   </>
                 )}
@@ -174,7 +216,7 @@ export default function LoginPage() {
         </div>
 
         <div className="mt-8 text-center text-xs text-neutral-500 font-mono">
-          <span>Protected by RepoRadar JWT Token Authentication</span>
+          <span>Protected by RepoRadar JWT Token & AES-256 Encryption</span>
         </div>
       </div>
     </div>

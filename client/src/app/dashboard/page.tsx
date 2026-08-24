@@ -12,7 +12,7 @@ import {
   CheckCircle2,
   Terminal,
   Key,
-  Layers,
+  Github,
 } from "lucide-react";
 import apiClient from "@/lib/api-client";
 
@@ -47,6 +47,8 @@ export default function DashboardPage() {
       loadProjects();
     }
   }, [session]);
+
+  const hasGithub = Boolean(session?.user?.github_username || session?.user?.github_id);
 
   return (
     <div className="min-h-screen bg-[#0A0A0A] text-[#FAFAFA] selection:bg-white selection:text-black">
@@ -90,10 +92,19 @@ export default function DashboardPage() {
         <div className="mb-8 p-6 md:p-8 rounded-2xl bg-gradient-to-b from-[#141414] to-[#0D0D0D] border border-white/10 shadow-xl">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
-              <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-mono mb-3">
-                <CheckCircle2 className="w-3.5 h-3.5" />
-                <span>NextAuth + Express JWT Connected</span>
+              <div className="flex flex-wrap items-center gap-2 mb-3">
+                <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-mono">
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  <span>NextAuth + Express JWT Connected</span>
+                </div>
+                {hasGithub && (
+                  <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-white/5 border border-white/10 text-white text-xs font-mono">
+                    <Github className="w-3.5 h-3.5" />
+                    <span>@{session?.user?.github_username || "github-linked"}</span>
+                  </div>
+                )}
               </div>
+
               <h1 className="text-2xl md:text-3xl font-extrabold text-white">
                 Welcome back, {session?.user?.name || "Developer"}
               </h1>
@@ -121,18 +132,26 @@ export default function DashboardPage() {
               <span className="text-xs font-mono uppercase text-neutral-400">Auth Telemetry</span>
               <Key className="w-4 h-4 text-neutral-300" />
             </div>
-            <div className="space-y-3 text-xs font-mono">
+            <div className="space-y-2.5 text-xs font-mono">
               <div>
                 <span className="text-neutral-500 block">User ID:</span>
                 <span className="text-white break-all">{session?.user?.id || "Loading..."}</span>
               </div>
+              {hasGithub && (
+                <div>
+                  <span className="text-neutral-500 block">GitHub Account:</span>
+                  <span className="text-white">
+                    @{session?.user?.github_username} (ID: {session?.user?.github_id})
+                  </span>
+                </div>
+              )}
               <div>
                 <span className="text-neutral-500 block">Session Strategy:</span>
                 <span className="text-emerald-400">JWT (7-Day Expiry)</span>
               </div>
               <div>
-                <span className="text-neutral-500 block">Protected Server API:</span>
-                <span className="text-emerald-400">Bearer Token Verified</span>
+                <span className="text-neutral-500 block">Encrypted OAuth Storage:</span>
+                <span className="text-emerald-400">AES-256-GCM Active</span>
               </div>
             </div>
           </div>
@@ -145,19 +164,19 @@ export default function DashboardPage() {
             </div>
             <div className="text-3xl font-bold text-white font-mono">ONLINE</div>
             <p className="mt-2 text-xs text-neutral-400">
-              AST Scanner & Vulnerability triage modules ready for ingestion.
+              AST Scanner & Vulnerability triage modules ready for repository ingestion.
             </p>
           </div>
 
           {/* Card 3: Security & Health */}
           <div className="p-6 rounded-xl bg-[#111111] border border-[#1F1F1F]">
             <div className="flex items-center justify-between mb-4">
-              <span className="text-xs font-mono uppercase text-neutral-400">Security Gate</span>
+              <span className="text-xs font-mono uppercase text-neutral-400">Security Perimeter</span>
               <ShieldAlert className="w-4 h-4 text-neutral-300" />
             </div>
             <div className="text-3xl font-bold text-white font-mono">0 CVEs</div>
             <p className="mt-2 text-xs text-neutral-400">
-              Module 1 & 2 authenticated security perimeter intact.
+              OAuth tokens encrypted at rest via cryptographic key.
             </p>
           </div>
         </div>
@@ -209,11 +228,16 @@ export default function DashboardPage() {
           <div className="mt-6 p-4 rounded-xl bg-[#0C0C0C] border border-[#1F1F1F] font-mono text-xs text-neutral-400 space-y-1">
             <div className="flex items-center gap-2 text-neutral-500">
               <Terminal className="w-3.5 h-3.5" />
-              <span>Diagnostic Token Header Check</span>
+              <span>Diagnostic GitHub OAuth Integration Check</span>
             </div>
             <div className="text-neutral-300">
               ✔ NextAuth Token: <span className="text-emerald-400">Attached & Verified</span>
             </div>
+            {hasGithub && (
+              <div className="text-neutral-300">
+                ✔ GitHub OAuth Sync: <span className="text-emerald-400">Linked to @{session?.user?.github_username}</span>
+              </div>
+            )}
           </div>
         </div>
       </main>
