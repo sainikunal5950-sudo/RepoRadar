@@ -1,10 +1,11 @@
 ### ====================================================================
-### RepoRadar Server REST API - Test Requests (Module 3: GitHub OAuth + Sync)
+### RepoRadar Server REST API - Test Requests (Module 4: Repositories & Sync)
 ### Use with VS Code REST Client extension, Postman, or curl
 ### ====================================================================
 
 @baseUrl = http://localhost:5000
 @projectId = 65d75cf9e1d84f23b890abcd
+@repoId = 65d75cf9e1d84f23b890abce
 
 # Set this after calling POST /api/auth/login or POST /api/users/sync-github
 @authToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
@@ -61,10 +62,40 @@ Authorization: Bearer {{authToken}}
 Accept: application/json
 
 ### ====================================================================
+### GitHub Repository Management Endpoints (Module 4 - Protected)
+### ====================================================================
+
+### 7. Sync GitHub Repositories (Calls Octokit with user's encrypted access token)
+# @name syncRepositories
+POST {{baseUrl}}/api/repositories/sync
+Authorization: Bearer {{authToken}}
+Accept: application/json
+
+### 8. List All Synced Repositories for Authenticated User
+GET {{baseUrl}}/api/repositories
+Authorization: Bearer {{authToken}}
+Accept: application/json
+
+### 9. List Only Selected Repositories for Radar Analysis
+GET {{baseUrl}}/api/repositories?selected=true
+Authorization: Bearer {{authToken}}
+Accept: application/json
+
+### 10. Select Repository for Radar Analysis
+PATCH {{baseUrl}}/api/repositories/{{repoId}}/select
+Authorization: Bearer {{authToken}}
+Accept: application/json
+
+### 11. Deselect Repository from Radar Analysis
+PATCH {{baseUrl}}/api/repositories/{{repoId}}/deselect
+Authorization: Bearer {{authToken}}
+Accept: application/json
+
+### ====================================================================
 ### Protected Project Resource Endpoints (Requires Authorization Header)
 ### ====================================================================
 
-### 7. Create Project - Success (Protected)
+### 12. Create Project - Success (Protected)
 # @name createProject
 POST {{baseUrl}}/api/projects
 Authorization: Bearer {{authToken}}
@@ -75,27 +106,27 @@ Content-Type: application/json
   "description": "AI-powered AST static analysis and vulnerability scanning pipeline"
 }
 
-### 8. List All Projects (Protected)
+### 13. List All Projects (Protected)
 GET {{baseUrl}}/api/projects
 Authorization: Bearer {{authToken}}
 Accept: application/json
 
-### 9. Get Project By ID (Protected)
+### 14. Get Project By ID (Protected)
 GET {{baseUrl}}/api/projects/{{projectId}}
 Authorization: Bearer {{authToken}}
 Accept: application/json
 
-### 10. Update Project (Protected)
+### 15. Update Project (Protected)
 PATCH {{baseUrl}}/api/projects/{{projectId}}
 Authorization: Bearer {{authToken}}
 Content-Type: application/json
 
 {
-  "name": "RepoRadar Core Engine (Updated v1.3)",
+  "name": "RepoRadar Core Engine (Updated v1.4)",
   "description": "Updated description with enhanced multi-language AST support"
 }
 
-### 11. Delete Project (Protected)
+### 16. Delete Project (Protected)
 DELETE {{baseUrl}}/api/projects/{{projectId}}
 Authorization: Bearer {{authToken}}
 Accept: application/json
@@ -104,39 +135,21 @@ Accept: application/json
 ### Validation & Auth Error Test Cases
 ### ====================================================================
 
-### 12. Auth Error: Call Protected Endpoint without Token (Expect 401)
-GET {{baseUrl}}/api/projects
+### 17. Auth Error: Call Protected Endpoint without Token (Expect 401)
+GET {{baseUrl}}/api/repositories
 Accept: application/json
 
-### 13. Auth Error: Call Protected Endpoint with Invalid Token (Expect 401)
-GET {{baseUrl}}/api/projects
+### 18. Auth Error: Call Protected Endpoint with Invalid Token (Expect 401)
+GET {{baseUrl}}/api/repositories
 Authorization: Bearer invalid-token-12345
 Accept: application/json
 
-### 14. Auth Error: Login with Wrong Password (Expect 401)
-POST {{baseUrl}}/api/auth/login
-Content-Type: application/json
+### 19. Sync Error: Sync Repositories without GitHub Linked (Expect 400 GITHUB_NOT_LINKED)
+POST {{baseUrl}}/api/repositories/sync
+Authorization: Bearer {{authToken}}
+Accept: application/json
 
-{
-  "email": "kunal@reporadar.io",
-  "password": "wrongpassword"
-}
-
-### 15. Validation Error: Register with short password (Expect 400)
-POST {{baseUrl}}/api/auth/register
-Content-Type: application/json
-
-{
-  "name": "Test User",
-  "email": "test@reporadar.io",
-  "password": "123"
-}
-
-### 16. Validation Error: Sync GitHub missing github_id (Expect 400)
-POST {{baseUrl}}/api/users/sync-github
-Content-Type: application/json
-
-{
-  "email": "invalid@reporadar.io",
-  "name": "Invalid User"
-}
+### 20. Validation Error: Select Repository with invalid ObjectId (Expect 400)
+PATCH {{baseUrl}}/api/repositories/invalid-mongo-id/select
+Authorization: Bearer {{authToken}}
+Accept: application/json

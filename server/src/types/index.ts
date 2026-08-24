@@ -36,6 +36,22 @@ export interface UserResponse {
   updatedAt: Date | string;
 }
 
+export interface RepositoryResponse {
+  id: string;
+  user_id: string;
+  github_repo_id: number;
+  github_repo_name: string;
+  github_repo_fullname: string;
+  github_repo_url: string;
+  description: string | null;
+  stars: number;
+  language: string | null;
+  is_selected: boolean;
+  last_synced_at: Date | string | null;
+  createdAt: Date | string;
+  updatedAt: Date | string;
+}
+
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace Express {

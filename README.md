@@ -221,7 +221,7 @@ GITHUB_CLIENT_SECRET="your_github_client_secret"
 
 ---
 
-## 🔌 API Endpoints (Module 3)
+## 🔌 API Endpoints (Module 4)
 
 ### Response Formats
 
@@ -232,14 +232,16 @@ All API endpoints return standardized JSON responses:
 {
   "success": true,
   "data": {
-    "user": {
-      "id": "65d75cf9e1d84f23b890abcd",
-      "name": "Kunal Saini",
-      "email": "kunal@reporadar.io",
-      "github_id": 12345678,
-      "github_username": "sainikunal5950-sudo"
-    },
-    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+    "id": "65d75cf9e1d84f23b890abcd",
+    "github_repo_id": 12345678,
+    "github_repo_name": "reporadar",
+    "github_repo_fullname": "sainikunal5950-sudo/reporadar",
+    "github_repo_url": "https://github.com/sainikunal5950-sudo/reporadar",
+    "description": "Your AI-powered radar for repository health, security, and code quality.",
+    "stars": 42,
+    "language": "TypeScript",
+    "is_selected": true,
+    "last_synced_at": "2026-08-24T07:15:00.000Z"
   }
 }
 ```
@@ -249,8 +251,8 @@ All API endpoints return standardized JSON responses:
 {
   "success": false,
   "error": {
-    "message": "Authentication required: Bearer token missing",
-    "code": "UNAUTHORIZED"
+    "message": "GitHub account not connected. Please log in with GitHub to enable repository syncing.",
+    "code": "GITHUB_NOT_LINKED"
   }
 }
 ```
@@ -267,6 +269,10 @@ All API endpoints return standardized JSON responses:
 | `POST` | `/api/auth/login` | No | Verify credentials & issue JWT token | `{ "email": string, "password": string }` |
 | `POST` | `/api/users/sync-github` | No (NextAuth Callback) | Sync GitHub profile & encrypt access token | `{ "email": string, "name"?: string, "github_id": number, "github_username"?: string, "github_access_token"?: string }` |
 | `GET` | `/api/auth/me` | **Yes (Bearer)** | Get current authenticated user | None |
+| `POST` | `/api/repositories/sync` | **Yes (Bearer)** | Ingest & sync all repositories from GitHub via Octokit | None |
+| `GET` | `/api/repositories` | **Yes (Bearer)** | List all synced repositories for user (supports `?selected=true`) | None |
+| `PATCH` | `/api/repositories/:id/select` | **Yes (Bearer)** | Select repository for active radar analysis | None |
+| `PATCH` | `/api/repositories/:id/deselect` | **Yes (Bearer)** | Deselect repository from radar analysis | None |
 | `GET` | `/api/projects` | **Yes (Bearer)** | List all projects | None |
 | `POST` | `/api/projects` | **Yes (Bearer)** | Create a new project | `{ "name": string, "description"?: string }` |
 | `GET` | `/api/projects/:id` | **Yes (Bearer)** | Get project by ID | None |
@@ -277,7 +283,7 @@ All API endpoints return standardized JSON responses:
 
 ### 🧪 Testing the API
 
-A complete REST test suite is included in [`server/requests.http`](file:///c:/Users/ASUS/OneDrive/Desktop/BEE/server/requests.http). You can execute authentication, GitHub OAuth user sync, token generation, protected calls, and error edge cases using the VS Code **REST Client** extension, Postman, or `curl`.
+A complete REST test suite is included in [`server/requests.http`](file:///c:/Users/ASUS/OneDrive/Desktop/BEE/server/requests.http). You can execute authentication, GitHub OAuth user sync, repository syncing, selection toggling, and error edge cases using the VS Code **REST Client** extension, Postman, or `curl`.
 
 ---
 
@@ -298,8 +304,9 @@ The frontend implements a dark monochrome aesthetic inspired by Vercel, Linear, 
 - [x] **Module 1:** Scalable Backend REST API Architecture (Layered Routes → Controllers → Services → Prisma, Centralized Error Handling, Zod Validation, Request Logging, Project Template Resource).
 - [x] **Module 2:** NextAuth.js Authentication & JWT Session Sharing (Credentials provider, Login/Register pages, Dashboard protection, Server bcrypt + JWT verification, Protected routes).
 - [x] **Module 3:** GitHub OAuth Integration & AES-256 Token Encryption (GithubProvider, OAuth callback user sync, encrypted access token storage at rest, session GitHub telemetry).
-- [ ] **Module 4:** Repository Ingestion, Octokit API Client & Static AST Analysis Engine.
-- [ ] **Module 5:** AI-Powered Vulnerability Radar Scorecard & Interactive Dashboard.
+- [x] **Module 4:** GitHub Repository Ingestion & Selection Management (Octokit REST SDK, Repository MongoDB model, encrypted token decryption, sync & selection API, `/dashboard/repositories` UI).
+- [ ] **Module 5:** Static AST Code Quality & Dependency Vulnerability Scanning Engine.
+- [ ] **Module 6:** AI-Synthesized Health Radar Scorecard & Interactive Visualizer.
 
 ---
 
