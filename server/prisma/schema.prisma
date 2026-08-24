@@ -10,7 +10,16 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Base schema for Module 0 - Models added in Module 1
+// Models
+model User {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  email     String   @unique
+  password  String?  // Nullable for OAuth (Module 3)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
 model Project {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
   name        String

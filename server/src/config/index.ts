@@ -8,6 +8,7 @@ export const config = {
   clientUrl: process.env.CLIENT_URL || "http://localhost:3000",
   databaseUrl: process.env.DATABASE_URL || "",
   nextAuthSecret: process.env.NEXTAUTH_SECRET || "",
+  jwtSecret: process.env.JWT_SECRET || process.env.NEXTAUTH_SECRET || "reporadar-default-secret-key-change-in-production",
   githubClientId: process.env.GITHUB_CLIENT_ID || "",
   githubClientSecret: process.env.GITHUB_CLIENT_SECRET || "",
 };

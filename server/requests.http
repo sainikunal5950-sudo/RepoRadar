@@ -1,10 +1,13 @@
 ### ====================================================================
-### RepoRadar Server REST API - Test Requests (Module 1)
+### RepoRadar Server REST API - Test Requests (Module 2: Auth + Protected CRUD)
 ### Use with VS Code REST Client extension, Postman, or curl
 ### ====================================================================
 
 @baseUrl = http://localhost:5000
 @projectId = 65d75cf9e1d84f23b890abcd
+
+# Set this after calling POST /api/auth/login
+@authToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
 ### 1. Server Root Info
 GET {{baseUrl}}/
@@ -14,9 +17,44 @@ Accept: application/json
 GET {{baseUrl}}/api/health
 Accept: application/json
 
-### 3. Create Project - Success
+### ====================================================================
+### Authentication Endpoints (Module 2)
+### ====================================================================
+
+### 3. Register a New User
+# @name registerUser
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+
+{
+  "name": "Kunal Saini",
+  "email": "kunal@reporadar.io",
+  "password": "securepassword123"
+}
+
+### 4. Login User (Obtains JWT Token for NextAuth Credentials & API calls)
+# @name loginUser
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "kunal@reporadar.io",
+  "password": "securepassword123"
+}
+
+### 5. Get Current User Profile (Protected with Bearer Token)
+GET {{baseUrl}}/api/auth/me
+Authorization: Bearer {{authToken}}
+Accept: application/json
+
+### ====================================================================
+### Protected Project Resource Endpoints (Requires Authorization Header)
+### ====================================================================
+
+### 6. Create Project - Success (Protected)
 # @name createProject
 POST {{baseUrl}}/api/projects
+Authorization: Bearer {{authToken}}
 Content-Type: application/json
 
 {
@@ -24,71 +62,59 @@ Content-Type: application/json
   "description": "AI-powered AST static analysis and vulnerability scanning pipeline"
 }
 
-### 4. Create Project 2 (Additional test project)
-POST {{baseUrl}}/api/projects
-Content-Type: application/json
-
-{
-  "name": "Next.js Web Client",
-  "description": "Interactive dark-mode radar dashboard and telemetry frontend"
-}
-
-### 5. List All Projects
+### 7. List All Projects (Protected)
 GET {{baseUrl}}/api/projects
+Authorization: Bearer {{authToken}}
 Accept: application/json
 
-### 6. Get Project By ID
-# Replace with an actual ID returned from the createProject request above
+### 8. Get Project By ID (Protected)
 GET {{baseUrl}}/api/projects/{{projectId}}
+Authorization: Bearer {{authToken}}
 Accept: application/json
 
-### 7. Update Project - Success (Update name and description)
+### 9. Update Project (Protected)
 PATCH {{baseUrl}}/api/projects/{{projectId}}
+Authorization: Bearer {{authToken}}
 Content-Type: application/json
 
 {
-  "name": "RepoRadar Core Engine (Updated v1.1)",
+  "name": "RepoRadar Core Engine (Updated v1.2)",
   "description": "Updated description with enhanced multi-language AST support"
 }
 
-### 8. Update Project - Partial (Update description only)
-PATCH {{baseUrl}}/api/projects/{{projectId}}
-Content-Type: application/json
-
-{
-  "description": "Updated description only"
-}
-
-### 9. Delete Project
+### 10. Delete Project (Protected)
 DELETE {{baseUrl}}/api/projects/{{projectId}}
+Authorization: Bearer {{authToken}}
 Accept: application/json
 
 ### ====================================================================
-### Validation & Error Handling Test Cases
+### Validation & Auth Error Test Cases
 ### ====================================================================
 
-### 10. Validation Error: Create Project with missing name (Expect 400)
-POST {{baseUrl}}/api/projects
+### 11. Auth Error: Call Protected Endpoint without Token (Expect 401)
+GET {{baseUrl}}/api/projects
+Accept: application/json
+
+### 12. Auth Error: Call Protected Endpoint with Invalid Token (Expect 401)
+GET {{baseUrl}}/api/projects
+Authorization: Bearer invalid-token-12345
+Accept: application/json
+
+### 13. Auth Error: Login with Wrong Password (Expect 401)
+POST {{baseUrl}}/api/auth/login
 Content-Type: application/json
 
 {
-  "description": "Project without a name"
+  "email": "kunal@reporadar.io",
+  "password": "wrongpassword"
 }
 
-### 11. Validation Error: Invalid MongoDB ObjectId in URL (Expect 400)
-GET {{baseUrl}}/api/projects/invalid-mongo-id-123
-Accept: application/json
-
-### 12. Validation Error: Update Project with empty body (Expect 400)
-PATCH {{baseUrl}}/api/projects/65d75cf9e1d84f23b890abcd
+### 14. Validation Error: Register with short password (Expect 400)
+POST {{baseUrl}}/api/auth/register
 Content-Type: application/json
 
-{}
-
-### 13. Not Found Error: Get Non-Existent Project (Expect 404)
-GET {{baseUrl}}/api/projects/65d75cf9e1d84f23b890abce
-Accept: application/json
-
-### 14. 404 Error: Non-Existent Route (Expect 404)
-GET {{baseUrl}}/api/unknown-endpoint
-Accept: application/json
+{
+  "name": "Test User",
+  "email": "test@reporadar.io",
+  "password": "123"
+}

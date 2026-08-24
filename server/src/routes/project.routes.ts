@@ -7,6 +7,7 @@ import {
   deleteProjectHandler,
 } from "../controllers/project.controller";
 import validate from "../middleware/validate";
+import authMiddleware from "../middleware/authMiddleware";
 import {
   createProjectSchema,
   updateProjectSchema,
@@ -14,6 +15,9 @@ import {
 } from "../schemas/project.schema";
 
 const router = Router();
+
+// Protect all project routes with JWT authentication
+router.use(authMiddleware);
 
 // GET /api/projects - List all projects
 router.get("/", getAllProjectsHandler);

@@ -1,5 +1,8 @@
+"use client";
+
 import React from "react";
 import Link from "next/link";
+import { useSession, signOut } from "next-auth/react";
 import {
   ShieldAlert,
   Activity,
@@ -14,9 +17,14 @@ import {
   Cpu,
   Layers,
   Sparkles,
+  LogOut,
+  LayoutDashboard,
 } from "lucide-react";
 
 export default function HomePage() {
+  const { data: session, status } = useSession();
+  const isAuthenticated = status === "authenticated";
+
   return (
     <div className="relative min-h-screen bg-[#0A0A0A] text-[#FAFAFA] selection:bg-white selection:text-black overflow-x-hidden">
       {/* Background Grid & Ambient Glow */}
@@ -28,7 +36,7 @@ export default function HomePage() {
       <header className="sticky top-0 z-50 backdrop-blur-xl bg-[#0A0A0A]/80 border-b border-[#1F1F1F]">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           {/* Logo / Brand */}
-          <div className="flex items-center gap-3">
+          <Link href="/" className="flex items-center gap-3">
             <div className="relative flex items-center justify-center w-9 h-9 rounded-lg bg-gradient-to-b from-white/15 to-white/5 border border-white/20 shadow-inner">
               <Radio className="w-5 h-5 text-white animate-pulse" />
               <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-[#0A0A0A]" />
@@ -39,7 +47,7 @@ export default function HomePage() {
                 v0.1
               </span>
             </span>
-          </div>
+          </Link>
 
           {/* Center Nav Links */}
           <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-neutral-400">
@@ -59,19 +67,41 @@ export default function HomePage() {
 
           {/* Right Action Buttons */}
           <div className="flex items-center gap-3">
-            <button
-              type="button"
-              className="text-sm font-medium text-neutral-300 hover:text-white px-3.5 py-2 rounded-lg transition-colors"
-            >
-              Sign In
-            </button>
-            <button
-              type="button"
-              className="text-sm font-semibold bg-white text-black px-4 py-2 rounded-lg transition-all duration-200 hover:bg-neutral-200 hover:shadow-[0_0_20px_rgba(255,255,255,0.35)] active:scale-[0.98] flex items-center gap-1.5"
-            >
-              Get Started
-              <ArrowRight className="w-4 h-4" />
-            </button>
+            {isAuthenticated ? (
+              <>
+                <Link
+                  href="/dashboard"
+                  className="text-sm font-medium bg-[#141414] hover:bg-[#1A1A1A] border border-[#262626] text-neutral-200 px-3.5 py-2 rounded-lg transition-colors flex items-center gap-2"
+                >
+                  <LayoutDashboard className="w-4 h-4" />
+                  <span>Dashboard</span>
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => signOut({ callbackUrl: "/" })}
+                  className="text-sm font-medium text-neutral-400 hover:text-white px-3 py-2 rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer"
+                >
+                  <LogOut className="w-4 h-4" />
+                  <span className="hidden sm:inline">Sign Out</span>
+                </button>
+              </>
+            ) : (
+              <>
+                <Link
+                  href="/login"
+                  className="text-sm font-medium text-neutral-300 hover:text-white px-3.5 py-2 rounded-lg transition-colors"
+                >
+                  Sign In
+                </Link>
+                <Link
+                  href="/register"
+                  className="text-sm font-semibold bg-white text-black px-4 py-2 rounded-lg transition-all duration-200 hover:bg-neutral-200 hover:shadow-[0_0_20px_rgba(255,255,255,0.35)] active:scale-[0.98] flex items-center gap-1.5"
+                >
+                  Get Started
+                  <ArrowRight className="w-4 h-4" />
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </header>

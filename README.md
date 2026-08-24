@@ -159,44 +159,71 @@ Follow these steps to get RepoRadar running locally on your machine.
 
 ---
 
-## 🔌 API Endpoints & Architecture (Module 1)
+## 🔐 Authentication Architecture (Module 2)
 
-The backend follows a strict layered REST API architecture pattern:
+RepoRadar uses a decoupled authentication architecture between the Next.js frontend and Express backend:
+
 ```
-Routes (URL Mapping) → Controllers (Req/Res + Helpers) → Services (Business Logic) → Prisma Client → MongoDB
+┌─────────────────────────┐                   ┌──────────────────────────┐
+│  Next.js 14+ (Client)   │                   │  Express + Node (Server) │
+│                         │                   │                          │
+│  NextAuth Credentials   │── POST /login ───▶│  Verify email + bcrypt   │
+│  Strategy: "jwt"        │◀─ User + JWT ─────│  Sign JWT (Shared Secret)│
+│                         │                   │                          │
+│  apiClient helper       │── Bearer Token ──▶│  authMiddleware verifies │
+│  (Attaches Bearer JWT)  │◀─ Protected Data ─│  req.user attached       │
+└─────────────────────────┘                   └──────────────────────────┘
 ```
+
+### Shared Secret Setup
+Both client and server must share the exact same `NEXTAUTH_SECRET` / `JWT_SECRET` key to sign and verify tokens seamlessly.
+
+Generate a secure 256-bit key:
+```bash
+openssl rand -base64 32
+```
+Add to `client/.env.local`:
+```env
+NEXTAUTH_SECRET="your-generated-secret-key"
+NEXTAUTH_URL="http://localhost:3000"
+NEXT_PUBLIC_API_URL="http://localhost:5000"
+```
+Add to `server/.env`:
+```env
+JWT_SECRET="your-generated-secret-key"
+NEXTAUTH_SECRET="your-generated-secret-key"
+```
+
+---
+
+## 🔌 API Endpoints (Module 2)
 
 ### Response Formats
 
-All API endpoints return predictable and standardized JSON responses:
+All API endpoints return standardized JSON responses:
 
 #### ✅ Success Response (`200 OK` / `201 Created`)
 ```json
 {
   "success": true,
   "data": {
-    "id": "65d75cf9e1d84f23b890abcd",
-    "name": "RepoRadar Core Engine",
-    "description": "AI-powered AST static analysis and vulnerability scanning pipeline",
-    "createdAt": "2026-08-24T06:00:00.000Z",
-    "updatedAt": "2026-08-24T06:00:00.000Z"
+    "user": {
+      "id": "65d75cf9e1d84f23b890abcd",
+      "name": "Kunal Saini",
+      "email": "kunal@reporadar.io"
+    },
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
   }
 }
 ```
 
-#### ❌ Error Response (`400 Bad Request` / `404 Not Found` / `500 Internal Error`)
+#### ❌ Error Response (`400 Bad Request` / `401 Unauthorized` / `404 Not Found`)
 ```json
 {
   "success": false,
   "error": {
-    "message": "Invalid Project ID format (must be 24-character hex MongoDB ObjectId)",
-    "code": "VALIDATION_ERROR",
-    "details": [
-      {
-        "field": "id",
-        "message": "Invalid Project ID format (must be 24-character hex MongoDB ObjectId)"
-      }
-    ]
+    "message": "Authentication required: Bearer token missing",
+    "code": "UNAUTHORIZED"
   }
 }
 ```
@@ -205,21 +232,24 @@ All API endpoints return predictable and standardized JSON responses:
 
 ### Endpoints Table
 
-| Method | Endpoint | Description | Request Body | Response Status |
+| Method | Endpoint | Auth Required | Description | Request Body |
 |---|---|---|---|---|
-| `GET` | `/` | API server info and links | None | `200 OK` |
-| `GET` | `/api/health` | Service health status & uptime | None | `200 OK` |
-| `GET` | `/api/projects` | List all projects (newest first) | None | `200 OK` |
-| `POST` | `/api/projects` | Create a new project | `{ "name": string, "description"?: string }` | `201 Created` |
-| `GET` | `/api/projects/:id` | Get project by 24-char ObjectId | None | `200 OK` / `404 Not Found` |
-| `PATCH` | `/api/projects/:id` | Update project fields | `{ "name"?: string, "description"?: string }` | `200 OK` / `404 Not Found` |
-| `DELETE` | `/api/projects/:id` | Delete project by ID | None | `200 OK` / `404 Not Found` |
+| `GET` | `/` | No | API server info | None |
+| `GET` | `/api/health` | No | Service health status & uptime | None |
+| `POST` | `/api/auth/register` | No | Register new developer account | `{ "name": string, "email": string, "password": string }` |
+| `POST` | `/api/auth/login` | No | Verify credentials & issue JWT token | `{ "email": string, "password": string }` |
+| `GET` | `/api/auth/me` | **Yes (Bearer)** | Get current authenticated user | None |
+| `GET` | `/api/projects` | **Yes (Bearer)** | List all projects | None |
+| `POST` | `/api/projects` | **Yes (Bearer)** | Create a new project | `{ "name": string, "description"?: string }` |
+| `GET` | `/api/projects/:id` | **Yes (Bearer)** | Get project by ID | None |
+| `PATCH` | `/api/projects/:id` | **Yes (Bearer)** | Update project by ID | `{ "name"?: string, "description"?: string }` |
+| `DELETE` | `/api/projects/:id` | **Yes (Bearer)** | Delete project by ID | None |
 
 ---
 
 ### 🧪 Testing the API
 
-A complete REST test suite is included in [`server/requests.http`](file:///c:/Users/ASUS/OneDrive/Desktop/BEE/server/requests.http). You can execute all endpoints and error cases directly using the VS Code **REST Client** extension, Postman, or `curl`.
+A complete REST test suite is included in [`server/requests.http`](file:///c:/Users/ASUS/OneDrive/Desktop/BEE/server/requests.http). You can execute authentication, token generation, protected calls, and error edge cases using the VS Code **REST Client** extension, Postman, or `curl`.
 
 ---
 
@@ -238,9 +268,9 @@ The frontend implements a dark monochrome aesthetic inspired by Vercel, Linear, 
 
 - [x] **Module 0:** Foundation Setup (Monorepo structure, Next.js client, Express + MongoDB + Prisma backend, Dark design system, Health checks).
 - [x] **Module 1:** Scalable Backend REST API Architecture (Layered Routes → Controllers → Services → Prisma, Centralized Error Handling, Zod Validation, Request Logging, Project Template Resource).
-- [ ] **Module 2:** NextAuth.js GitHub OAuth Authentication & Session Management.
-- [ ] **Module 3:** AI-Powered Vulnerability Radar & Automated Health Scorecard.
-- [ ] **Module 4:** Interactive Dashboard, Real-Time Webhooks & Notifications.
+- [x] **Module 2:** NextAuth.js Authentication & JWT Session Sharing (Credentials provider, Login/Register pages, Dashboard protection, Server bcrypt + JWT verification, Protected routes).
+- [ ] **Module 3:** GitHub OAuth Integration & AI-Powered Static AST Analysis Engine.
+- [ ] **Module 4:** Vulnerability Radar Scorecard, Interactive Telemetry & Webhooks.
 
 ---
 

@@ -12,3 +12,23 @@ export interface ProjectResponse {
   createdAt: Date | string;
   updatedAt: Date | string;
 }
+
+export interface AuthUserPayload {
+  id: string;
+  name: string;
+  email: string;
+}
+
+export interface AuthResponse {
+  user: AuthUserPayload;
+  token: string;
+}
+
+declare global {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
+  namespace Express {
+    interface Request {
+      user?: AuthUserPayload;
+    }
+  }
+}
