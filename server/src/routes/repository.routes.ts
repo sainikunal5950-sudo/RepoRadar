@@ -7,6 +7,10 @@ import {
   fetchRepositoryDataHandler,
   getRepositoryMetricsHandler,
   getRepositoryCommitsHandler,
+  fetchRepositoryCodeHandler,
+  getRepositoryFileTreeHandler,
+  getRepositoryFilesHandler,
+  getRepositoryFileContentHandler,
 } from "../controllers/repository.controller";
 import authMiddleware from "../middleware/authMiddleware";
 import validate from "../middleware/validate";
@@ -37,5 +41,17 @@ router.get("/:id/metrics", validate(repositoryIdParamSchema), getRepositoryMetri
 
 // GET /api/repositories/:id/commits - Retrieve paginated commits history
 router.get("/:id/commits", validate(repositoryIdParamSchema), getRepositoryCommitsHandler);
+
+// POST /api/repositories/:id/fetch-code - Ingest source code tree and file blobs
+router.post("/:id/fetch-code", validate(repositoryIdParamSchema), fetchRepositoryCodeHandler);
+
+// GET /api/repositories/:id/files/tree - Retrieve stored hierarchical file tree
+router.get("/:id/files/tree", validate(repositoryIdParamSchema), getRepositoryFileTreeHandler);
+
+// GET /api/repositories/:id/files - Retrieve paginated file metadata
+router.get("/:id/files", validate(repositoryIdParamSchema), getRepositoryFilesHandler);
+
+// GET /api/repositories/:id/files/:fileId - Retrieve content of a single file
+router.get("/:id/files/:fileId", validate(repositoryIdParamSchema), getRepositoryFileContentHandler);
 
 export default router;

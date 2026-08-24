@@ -221,7 +221,7 @@ GITHUB_CLIENT_SECRET="your_github_client_secret"
 
 ---
 
-## 🔌 API Endpoints (Module 5)
+## 🔌 API Endpoints (Module 6)
 
 ### Response Formats
 
@@ -232,26 +232,26 @@ All API endpoints return standardized JSON responses:
 {
   "success": true,
   "data": {
-    "id": "65d75cf9e1d84f23b890abcd",
-    "github_repo_id": 12345678,
-    "github_repo_name": "reporadar",
-    "github_repo_fullname": "sainikunal5950-sudo/reporadar",
-    "github_repo_url": "https://github.com/sainikunal5950-sudo/reporadar",
-    "description": "Your AI-powered radar for repository health, security, and code quality.",
-    "stars": 42,
-    "language": "TypeScript",
-    "is_selected": true,
-    "last_synced_at": "2026-08-24T09:30:00.000Z",
-    "metrics": {
-      "stars_count": 42,
-      "forks_count": 8,
-      "open_issues_count": 3,
-      "open_prs_count": 1,
-      "default_branch": "main"
-    },
-    "languages": [
-      { "language": "TypeScript", "bytes": 145000, "percentage": 82.5 },
-      { "language": "CSS", "bytes": 30750, "percentage": 17.5 }
+    "total_files": 128,
+    "indexed_files": 120,
+    "skipped_files": 8,
+    "total_dirs": 14,
+    "tree": [
+      {
+        "name": "src",
+        "path": "src",
+        "type": "folder",
+        "children": [
+          {
+            "name": "app.ts",
+            "path": "src/app.ts",
+            "type": "file",
+            "size": 2450,
+            "language": "typescript",
+            "file_id": "65d75cf9e1d84f23b890abcf"
+          }
+        ]
+      }
     ]
   }
 }
@@ -287,6 +287,10 @@ All API endpoints return standardized JSON responses:
 | `POST` | `/api/repositories/:id/fetch-data` | **Yes (Bearer)** | Fetch & store detailed telemetry from GitHub (metrics, languages, commits) | None |
 | `GET` | `/api/repositories/:id/metrics` | **Yes (Bearer)** | Retrieve metrics, language breakdown, and latest commits | None |
 | `GET` | `/api/repositories/:id/commits` | **Yes (Bearer)** | Retrieve paginated commit history (`?page=1&limit=20`) | None |
+| `POST` | `/api/repositories/:id/fetch-code` | **Yes (Bearer)** | Ingest source code tree and file blobs | None |
+| `GET` | `/api/repositories/:id/files/tree` | **Yes (Bearer)** | Retrieve stored hierarchical file tree | None |
+| `GET` | `/api/repositories/:id/files` | **Yes (Bearer)** | Retrieve paginated file metadata (`?page=1&limit=50&language=typescript`) | None |
+| `GET` | `/api/repositories/:id/files/:fileId` | **Yes (Bearer)** | Retrieve content of a single file | None |
 | `GET` | `/api/projects` | **Yes (Bearer)** | List all projects | None |
 | `POST` | `/api/projects` | **Yes (Bearer)** | Create a new project | `{ "name": string, "description"?: string }` |
 | `GET` | `/api/projects/:id` | **Yes (Bearer)** | Get project by ID | None |
@@ -297,7 +301,7 @@ All API endpoints return standardized JSON responses:
 
 ### 🧪 Testing the API
 
-A complete REST test suite is included in [`server/requests.http`](file:///c:/Users/ASUS/OneDrive/Desktop/BEE/server/requests.http). You can execute authentication, GitHub OAuth user sync, repository syncing, detailed telemetry ingestion, selection toggling, and error edge cases using the VS Code **REST Client** extension, Postman, or `curl`.
+A complete REST test suite is included in [`server/requests.http`](file:///c:/Users/ASUS/OneDrive/Desktop/BEE/server/requests.http). You can execute authentication, GitHub OAuth user sync, repository syncing, detailed telemetry ingestion, source code indexing, selection toggling, and error edge cases using the VS Code **REST Client** extension, Postman, or `curl`.
 
 ---
 
@@ -320,8 +324,9 @@ The frontend implements a dark monochrome aesthetic inspired by Vercel, Linear, 
 - [x] **Module 3:** GitHub OAuth Integration & AES-256 Token Encryption (GithubProvider, OAuth callback user sync, encrypted access token storage at rest, session GitHub telemetry).
 - [x] **Module 4:** GitHub Repository Ingestion & Selection Management (Octokit REST SDK, Repository MongoDB model, encrypted token decryption, sync & selection API, `/dashboard/repositories` UI).
 - [x] **Module 5:** Detailed GitHub Telemetry, Metrics & Interactive Dashboard (Metrics, Language percentage breakdown, Commits timeline, `/dashboard` Overview grid, `/dashboard/repositories/:id` detail view).
-- [ ] **Module 6:** Static AST Code Quality & Dependency Vulnerability Scanning Engine.
-- [ ] **Module 7:** AI-Synthesized Health Radar Scorecard & Interactive Visualizer.
+- [x] **Module 6:** Source Code Ingestion, Indexing, File Tree & VS Code-like Code Explorer (`/dashboard/repositories/:id/code`, Prism syntax highlighter, collapsible Tree).
+- [ ] **Module 7:** Static AST Code Quality & Dependency Vulnerability Scanning Engine.
+- [ ] **Module 8:** AI-Synthesized Health Radar Scorecard & Interactive Visualizer.
 
 ---
 

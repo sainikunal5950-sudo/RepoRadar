@@ -108,10 +108,35 @@ Authorization: Bearer {{authToken}}
 Accept: application/json
 
 ### ====================================================================
+### Source Code Ingestion & File Explorer Endpoints (Module 6 - Protected)
+### ====================================================================
+
+### 15. Ingest Source Code & Build Hierarchical File Tree
+# @name fetchRepositoryCode
+POST {{baseUrl}}/api/repositories/{{repoId}}/fetch-code
+Authorization: Bearer {{authToken}}
+Accept: application/json
+
+### 16. Get Hierarchical File Tree Structure
+GET {{baseUrl}}/api/repositories/{{repoId}}/files/tree
+Authorization: Bearer {{authToken}}
+Accept: application/json
+
+### 17. Get Paginated Repository Files Metadata
+GET {{baseUrl}}/api/repositories/{{repoId}}/files?page=1&limit=20&language=typescript
+Authorization: Bearer {{authToken}}
+Accept: application/json
+
+### 18. Get Single File Content by File ID
+GET {{baseUrl}}/api/repositories/{{repoId}}/files/65d75cf9e1d84f23b890abcf
+Authorization: Bearer {{authToken}}
+Accept: application/json
+
+### ====================================================================
 ### Protected Project Resource Endpoints (Requires Authorization Header)
 ### ====================================================================
 
-### 15. Create Project - Success (Protected)
+### 19. Create Project - Success (Protected)
 # @name createProject
 POST {{baseUrl}}/api/projects
 Authorization: Bearer {{authToken}}

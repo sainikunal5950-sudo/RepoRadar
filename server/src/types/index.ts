@@ -71,6 +71,40 @@ export interface RepositoryCommitResponse {
   updatedAt: Date | string;
 }
 
+export interface RepositoryFileResponse {
+  id: string;
+  repository_id: string;
+  file_path: string;
+  file_type: string;
+  file_size: number;
+  language: string | null;
+  content?: string | null;
+  is_binary: boolean;
+  last_fetched_at: Date | string;
+  createdAt: Date | string;
+  updatedAt: Date | string;
+}
+
+export interface TreeNode {
+  name: string;
+  path: string;
+  type: "file" | "folder";
+  size?: number;
+  file_id?: string;
+  file_type?: string;
+  language?: string | null;
+  children?: TreeNode[];
+}
+
+export interface RepositoryFileTreeResponse {
+  id: string;
+  repository_id: string;
+  tree: TreeNode[];
+  total_files: number;
+  total_dirs: number;
+  updated_at: Date | string;
+}
+
 export interface RepositoryResponse {
   id: string;
   user_id: string;
@@ -86,6 +120,8 @@ export interface RepositoryResponse {
   metrics?: RepositoryMetricsResponse | null;
   languages?: RepositoryLanguageResponse[];
   commits?: RepositoryCommitResponse[];
+  files?: RepositoryFileResponse[];
+  fileTree?: RepositoryFileTreeResponse | null;
   createdAt: Date | string;
   updatedAt: Date | string;
 }

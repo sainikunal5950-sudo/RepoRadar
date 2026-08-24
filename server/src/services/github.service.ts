@@ -33,6 +33,15 @@ export interface GitHubCommitData {
   committed_at: Date;
 }
 
+export interface GitTreeItem {
+  path: string;
+  mode: string;
+  type: "blob" | "tree" | "commit";
+  sha: string;
+  size?: number;
+  url?: string;
+}
+
 /**
  * Initializes an authenticated Octokit instance with the decrypted user OAuth token
  */
@@ -178,10 +187,68 @@ export async function fetchRepositoryCommits(
   });
 }
 
+/**
+ * Fetches full recursive git tree using GitHub Git Database Tree API
+ */
+export async function fetchRepositoryGitTree(
+  octokit: Octokit,
+  owner: string,
+  repo: string,
+  treeSha = "HEAD"
+): Promise<GitTreeItem[]> {
+  const response = await octokit.rest.git.getTree({
+    owner,
+    repo,
+    tree_sha: treeSha,
+    recursive: "true",
+  });
+
+  return (response.data.tree as GitTreeItem[]) || [];
+}
+
+/**
+ * Fetches content of a specific file blob from GitHub
+ */
+export async function fetchFileContent(
+  octokit: Octokit,
+  owner: string,
+  repo: string,
+  path: string,
+  ref?: string
+): Promise<{ content: string | null; size: number; encoding?: string }> {
+  try {
+    const response = await octokit.rest.repos.getContent({
+      owner,
+      repo,
+      path,
+      ...(ref ? { ref } : {}),
+    });
+
+    if (Array.isArray(response.data)) {
+      return { content: null, size: 0 };
+    }
+
+    if ("content" in response.data && response.data.content) {
+      if (response.data.encoding === "base64") {
+        const decoded = Buffer.from(response.data.content, "base64").toString("utf-8");
+        return { content: decoded, size: response.data.size, encoding: "utf-8" };
+      }
+      return { content: response.data.content, size: response.data.size, encoding: response.data.encoding };
+    }
+
+    return { content: null, size: (response.data as { size?: number }).size || 0 };
+  } catch (error) {
+    const errorMsg = error instanceof Error ? error.message : "Failed to fetch file";
+    throw new Error(`File fetch failed for '${path}': ${errorMsg}`);
+  }
+}
+
 export default {
   initializeOctokit,
   fetchUserRepositories,
   fetchRepositoryMetrics,
   fetchRepositoryLanguages,
   fetchRepositoryCommits,
+  fetchRepositoryGitTree,
+  fetchFileContent,
 };
