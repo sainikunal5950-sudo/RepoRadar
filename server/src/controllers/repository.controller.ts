@@ -4,7 +4,7 @@ import { sendSuccess } from "../lib/response";
 import repositoryService from "../services/repository.service";
 
 /**
- * POST /api/repositories/sync - Trigger GitHub repository synchronization
+ * POST /api/repositories/sync - Trigger GitHub repository list synchronization
  */
 export const syncRepositoriesHandler = asyncHandler(
   async (req: Request, res: Response) => {
@@ -14,7 +14,7 @@ export const syncRepositoriesHandler = asyncHandler(
 );
 
 /**
- * GET /api/repositories - List all repositories for the logged-in user
+ * GET /api/repositories - List all repositories for the logged-in user with nested metrics
  */
 export const getUserRepositoriesHandler = asyncHandler(
   async (req: Request, res: Response) => {
@@ -58,5 +58,52 @@ export const deselectRepositoryHandler = asyncHandler(
       false
     );
     sendSuccess(res, repo, 200);
+  }
+);
+
+/**
+ * POST /api/repositories/:id/fetch-data - Ingest detailed repository telemetry from GitHub
+ */
+export const fetchRepositoryDataHandler = asyncHandler(
+  async (req: Request, res: Response) => {
+    const id = (Array.isArray(req.params.id) ? req.params.id[0] : req.params.id) as string;
+    const details = await repositoryService.fetchAndStoreRepositoryDetails(
+      req.user!.id,
+      id
+    );
+    sendSuccess(res, details, 200);
+  }
+);
+
+/**
+ * GET /api/repositories/:id/metrics - Retrieve stored metrics, languages, and recent commits for a repo
+ */
+export const getRepositoryMetricsHandler = asyncHandler(
+  async (req: Request, res: Response) => {
+    const id = (Array.isArray(req.params.id) ? req.params.id[0] : req.params.id) as string;
+    const metrics = await repositoryService.getRepositoryMetrics(
+      req.user!.id,
+      id
+    );
+    sendSuccess(res, metrics, 200);
+  }
+);
+
+/**
+ * GET /api/repositories/:id/commits - Retrieve paginated commits for a repository
+ */
+export const getRepositoryCommitsHandler = asyncHandler(
+  async (req: Request, res: Response) => {
+    const id = (Array.isArray(req.params.id) ? req.params.id[0] : req.params.id) as string;
+    const page = req.query.page ? parseInt(String(req.query.page), 10) : 1;
+    const limit = req.query.limit ? parseInt(String(req.query.limit), 10) : 20;
+
+    const commitsData = await repositoryService.getRepositoryCommits(
+      req.user!.id,
+      id,
+      page,
+      limit
+    );
+    sendSuccess(res, commitsData, 200);
   }
 );

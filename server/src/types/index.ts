@@ -36,6 +36,41 @@ export interface UserResponse {
   updatedAt: Date | string;
 }
 
+export interface RepositoryMetricsResponse {
+  id: string;
+  repository_id: string;
+  stars_count: number;
+  forks_count: number;
+  open_issues_count: number;
+  open_prs_count: number;
+  default_branch: string | null;
+  total_commits: number | null;
+  last_commit_date: Date | string | null;
+  createdAt: Date | string;
+  updatedAt: Date | string;
+}
+
+export interface RepositoryLanguageResponse {
+  id: string;
+  repository_id: string;
+  language: string;
+  bytes: number;
+  percentage: number;
+  createdAt: Date | string;
+  updatedAt: Date | string;
+}
+
+export interface RepositoryCommitResponse {
+  id: string;
+  repository_id: string;
+  commit_sha: string;
+  author: string;
+  message: string;
+  committed_at: Date | string;
+  createdAt: Date | string;
+  updatedAt: Date | string;
+}
+
 export interface RepositoryResponse {
   id: string;
   user_id: string;
@@ -48,6 +83,9 @@ export interface RepositoryResponse {
   language: string | null;
   is_selected: boolean;
   last_synced_at: Date | string | null;
+  metrics?: RepositoryMetricsResponse | null;
+  languages?: RepositoryLanguageResponse[];
+  commits?: RepositoryCommitResponse[];
   createdAt: Date | string;
   updatedAt: Date | string;
 }

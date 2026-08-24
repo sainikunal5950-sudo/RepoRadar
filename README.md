@@ -221,7 +221,7 @@ GITHUB_CLIENT_SECRET="your_github_client_secret"
 
 ---
 
-## 🔌 API Endpoints (Module 4)
+## 🔌 API Endpoints (Module 5)
 
 ### Response Formats
 
@@ -241,7 +241,18 @@ All API endpoints return standardized JSON responses:
     "stars": 42,
     "language": "TypeScript",
     "is_selected": true,
-    "last_synced_at": "2026-08-24T07:15:00.000Z"
+    "last_synced_at": "2026-08-24T09:30:00.000Z",
+    "metrics": {
+      "stars_count": 42,
+      "forks_count": 8,
+      "open_issues_count": 3,
+      "open_prs_count": 1,
+      "default_branch": "main"
+    },
+    "languages": [
+      { "language": "TypeScript", "bytes": 145000, "percentage": 82.5 },
+      { "language": "CSS", "bytes": 30750, "percentage": 17.5 }
+    ]
   }
 }
 ```
@@ -270,9 +281,12 @@ All API endpoints return standardized JSON responses:
 | `POST` | `/api/users/sync-github` | No (NextAuth Callback) | Sync GitHub profile & encrypt access token | `{ "email": string, "name"?: string, "github_id": number, "github_username"?: string, "github_access_token"?: string }` |
 | `GET` | `/api/auth/me` | **Yes (Bearer)** | Get current authenticated user | None |
 | `POST` | `/api/repositories/sync` | **Yes (Bearer)** | Ingest & sync all repositories from GitHub via Octokit | None |
-| `GET` | `/api/repositories` | **Yes (Bearer)** | List all synced repositories for user (supports `?selected=true`) | None |
+| `GET` | `/api/repositories` | **Yes (Bearer)** | List all synced repositories for user (with nested metrics) | None |
 | `PATCH` | `/api/repositories/:id/select` | **Yes (Bearer)** | Select repository for active radar analysis | None |
 | `PATCH` | `/api/repositories/:id/deselect` | **Yes (Bearer)** | Deselect repository from radar analysis | None |
+| `POST` | `/api/repositories/:id/fetch-data` | **Yes (Bearer)** | Fetch & store detailed telemetry from GitHub (metrics, languages, commits) | None |
+| `GET` | `/api/repositories/:id/metrics` | **Yes (Bearer)** | Retrieve metrics, language breakdown, and latest commits | None |
+| `GET` | `/api/repositories/:id/commits` | **Yes (Bearer)** | Retrieve paginated commit history (`?page=1&limit=20`) | None |
 | `GET` | `/api/projects` | **Yes (Bearer)** | List all projects | None |
 | `POST` | `/api/projects` | **Yes (Bearer)** | Create a new project | `{ "name": string, "description"?: string }` |
 | `GET` | `/api/projects/:id` | **Yes (Bearer)** | Get project by ID | None |
@@ -283,7 +297,7 @@ All API endpoints return standardized JSON responses:
 
 ### 🧪 Testing the API
 
-A complete REST test suite is included in [`server/requests.http`](file:///c:/Users/ASUS/OneDrive/Desktop/BEE/server/requests.http). You can execute authentication, GitHub OAuth user sync, repository syncing, selection toggling, and error edge cases using the VS Code **REST Client** extension, Postman, or `curl`.
+A complete REST test suite is included in [`server/requests.http`](file:///c:/Users/ASUS/OneDrive/Desktop/BEE/server/requests.http). You can execute authentication, GitHub OAuth user sync, repository syncing, detailed telemetry ingestion, selection toggling, and error edge cases using the VS Code **REST Client** extension, Postman, or `curl`.
 
 ---
 
@@ -305,8 +319,9 @@ The frontend implements a dark monochrome aesthetic inspired by Vercel, Linear, 
 - [x] **Module 2:** NextAuth.js Authentication & JWT Session Sharing (Credentials provider, Login/Register pages, Dashboard protection, Server bcrypt + JWT verification, Protected routes).
 - [x] **Module 3:** GitHub OAuth Integration & AES-256 Token Encryption (GithubProvider, OAuth callback user sync, encrypted access token storage at rest, session GitHub telemetry).
 - [x] **Module 4:** GitHub Repository Ingestion & Selection Management (Octokit REST SDK, Repository MongoDB model, encrypted token decryption, sync & selection API, `/dashboard/repositories` UI).
-- [ ] **Module 5:** Static AST Code Quality & Dependency Vulnerability Scanning Engine.
-- [ ] **Module 6:** AI-Synthesized Health Radar Scorecard & Interactive Visualizer.
+- [x] **Module 5:** Detailed GitHub Telemetry, Metrics & Interactive Dashboard (Metrics, Language percentage breakdown, Commits timeline, `/dashboard` Overview grid, `/dashboard/repositories/:id` detail view).
+- [ ] **Module 6:** Static AST Code Quality & Dependency Vulnerability Scanning Engine.
+- [ ] **Module 7:** AI-Synthesized Health Radar Scorecard & Interactive Visualizer.
 
 ---
 

@@ -1,31 +1,25 @@
 import { Request, Response, NextFunction } from "express";
-import { ZodError, ZodTypeAny } from "zod";
+import { ZodError, ZodTypeAny, z } from "zod";
 import AppError from "../lib/AppError";
 
-export interface RequestValidationSchema {
-  body?: ZodTypeAny;
-  params?: ZodTypeAny;
-  query?: ZodTypeAny;
-}
-
-export const validate = (schema: RequestValidationSchema | ZodTypeAny) => {
+export const validate = (schema: ZodTypeAny) => {
   return async (req: Request, _res: Response, next: NextFunction) => {
     try {
-      // Check if schema has explicit body/params/query keys
-      if ("body" in schema || "params" in schema || "query" in schema) {
-        const complexSchema = schema as RequestValidationSchema;
-        if (complexSchema.body) {
-          req.body = await complexSchema.body.parseAsync(req.body);
-        }
-        if (complexSchema.params) {
-          req.params = (await complexSchema.params.parseAsync(req.params)) as Record<string, string>;
-        }
-        if (complexSchema.query) {
-          req.query = (await complexSchema.query.parseAsync(req.query)) as Record<string, string>;
-        }
+      if (
+        schema instanceof z.ZodObject &&
+        ("body" in schema.shape || "params" in schema.shape || "query" in schema.shape)
+      ) {
+        const parsed = (await schema.parseAsync({
+          body: req.body,
+          params: req.params,
+          query: req.query,
+        })) as { body?: unknown; params?: unknown; query?: unknown };
+
+        if (parsed.body !== undefined) req.body = parsed.body;
+        if (parsed.params !== undefined) req.params = parsed.params as Record<string, string>;
+        if (parsed.query !== undefined) req.query = parsed.query as Record<string, string>;
       } else {
-        // Direct schema defaults to validating req.body
-        req.body = await (schema as ZodTypeAny).parseAsync(req.body);
+        req.body = await schema.parseAsync(req.body);
       }
       next();
     } catch (error) {

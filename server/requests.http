@@ -62,7 +62,7 @@ Authorization: Bearer {{authToken}}
 Accept: application/json
 
 ### ====================================================================
-### GitHub Repository Management Endpoints (Module 4 - Protected)
+### GitHub Repository Management & Telemetry Endpoints (Module 4 & 5 - Protected)
 ### ====================================================================
 
 ### 7. Sync GitHub Repositories (Calls Octokit with user's encrypted access token)
@@ -71,7 +71,7 @@ POST {{baseUrl}}/api/repositories/sync
 Authorization: Bearer {{authToken}}
 Accept: application/json
 
-### 8. List All Synced Repositories for Authenticated User
+### 8. List All Synced Repositories for Authenticated User (with metrics)
 GET {{baseUrl}}/api/repositories
 Authorization: Bearer {{authToken}}
 Accept: application/json
@@ -91,11 +91,27 @@ PATCH {{baseUrl}}/api/repositories/{{repoId}}/deselect
 Authorization: Bearer {{authToken}}
 Accept: application/json
 
+### 12. Fetch Detailed Telemetry from GitHub (Metrics, Languages, Commits)
+# @name fetchRepositoryDetails
+POST {{baseUrl}}/api/repositories/{{repoId}}/fetch-data
+Authorization: Bearer {{authToken}}
+Accept: application/json
+
+### 13. Get Repository Metrics & Language Breakdown
+GET {{baseUrl}}/api/repositories/{{repoId}}/metrics
+Authorization: Bearer {{authToken}}
+Accept: application/json
+
+### 14. Get Paginated Repository Commits
+GET {{baseUrl}}/api/repositories/{{repoId}}/commits?page=1&limit=10
+Authorization: Bearer {{authToken}}
+Accept: application/json
+
 ### ====================================================================
 ### Protected Project Resource Endpoints (Requires Authorization Header)
 ### ====================================================================
 
-### 12. Create Project - Success (Protected)
+### 15. Create Project - Success (Protected)
 # @name createProject
 POST {{baseUrl}}/api/projects
 Authorization: Bearer {{authToken}}
