@@ -16,7 +16,7 @@ model User {
   name                String
   email               String       @unique
   password            String?      // Nullable for OAuth users
-  github_id           Int?         @unique
+  github_id           Int?
   github_username     String?
   github_access_token String?      // Encrypted AES-256 string
   repositories        Repository[]

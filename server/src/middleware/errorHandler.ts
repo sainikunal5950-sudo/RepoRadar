@@ -50,7 +50,12 @@ export const errorHandler: ErrorRequestHandler = (
     } else if (prismaErr.code === "P2002") {
       statusCode = 409;
       code = "CONFLICT";
-      message = `Unique constraint failed on field(s): ${prismaErr.meta?.target?.join(", ") || "unknown"}`;
+      const target = Array.isArray(prismaErr.meta?.target)
+        ? prismaErr.meta.target.join(", ")
+        : typeof prismaErr.meta?.target === "string"
+        ? prismaErr.meta.target
+        : "unknown";
+      message = `Unique constraint failed on field(s): ${target}`;
     }
   }
   // Prisma validation/argument errors (e.g. invalid ObjectId format)
