@@ -198,6 +198,42 @@ Authorization: Bearer {{authToken}}
 Accept: application/json
 
 ### ====================================================================
+### Developer Analytics & Hotspots Endpoints (Module 9 - Protected)
+### ====================================================================
+
+### 30. Sync Extended Commits & Compute Developer Analytics
+# @name syncCommitData
+POST {{baseUrl}}/api/repositories/{{repoId}}/sync-commits
+Authorization: Bearer {{authToken}}
+Accept: application/json
+
+### 31. Get Contributor Leaderboard & Stats
+GET {{baseUrl}}/api/repositories/{{repoId}}/analytics/contributors
+Authorization: Bearer {{authToken}}
+Accept: application/json
+
+### 32. Get Commit Activity Timeline (Grouped by day/week/month)
+GET {{baseUrl}}/api/repositories/{{repoId}}/analytics/activity?groupBy=day
+Authorization: Bearer {{authToken}}
+Accept: application/json
+
+### 33. Get Commit Heatmap Matrix (7 days x 24 hours)
+GET {{baseUrl}}/api/repositories/{{repoId}}/analytics/heatmap
+Authorization: Bearer {{authToken}}
+Accept: application/json
+
+### 34. Get File Hotspots Ranked by Technical Debt Risk Score
+GET {{baseUrl}}/api/repositories/{{repoId}}/analytics/hotspots?limit=20
+Authorization: Bearer {{authToken}}
+Accept: application/json
+
+### 35. Get Technical Debt High-Risk Files with Explanations
+GET {{baseUrl}}/api/repositories/{{repoId}}/analytics/technical-debt
+Authorization: Bearer {{authToken}}
+Accept: application/json
+
+
+### ====================================================================
 ### Protected Project Resource Endpoints (Requires Authorization Header)
 ### ====================================================================
 

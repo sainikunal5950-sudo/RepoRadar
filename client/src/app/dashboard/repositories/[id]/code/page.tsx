@@ -16,7 +16,9 @@ import {
   Github,
   Layers,
   ShieldCheck,
+  Activity,
 } from "lucide-react";
+
 import apiClient from "@/lib/api-client";
 import FileTree, { TreeNode } from "@/components/ui/FileTree";
 import FileViewer from "@/components/ui/FileViewer";
@@ -215,6 +217,14 @@ export default function RepositoryCodeExplorerPage() {
         {/* Action Button */}
         <div className="flex items-center gap-3 shrink-0">
           <Link
+            href={`/dashboard/repositories/${repoId}/analytics`}
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#161616] hover:bg-[#202020] border border-[#2A2A2A] text-neutral-300 hover:text-white text-xs font-mono transition-colors"
+          >
+            <Activity className="w-3.5 h-3.5 text-indigo-400" />
+            <span>Dev Analytics</span>
+          </Link>
+
+          <Link
             href={`/dashboard/repositories/${repoId}/analysis`}
             className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#161616] hover:bg-[#202020] border border-[#2A2A2A] text-neutral-300 hover:text-white text-xs font-mono transition-colors"
           >
@@ -229,6 +239,7 @@ export default function RepositoryCodeExplorerPage() {
             <ArrowLeft className="w-3.5 h-3.5" />
             <span>Overview</span>
           </Link>
+
 
           <button
             type="button"

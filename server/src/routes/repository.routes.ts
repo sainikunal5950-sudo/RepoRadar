@@ -22,7 +22,14 @@ import {
   getSeverityDistributionAnalyticsHandler,
   getTypeDistributionAnalyticsHandler,
   getTopFilesAnalyticsHandler,
+  syncRepositoryCommitsHandler,
+  getRepositoryContributorsHandler,
+  getRepositoryActivityHandler,
+  getRepositoryHeatmapHandler,
+  getRepositoryHotspotsHandler,
+  getRepositoryTechnicalDebtHandler,
 } from "../controllers/repository.controller";
+
 import authMiddleware from "../middleware/authMiddleware";
 import validate from "../middleware/validate";
 import {
@@ -102,6 +109,25 @@ router.get("/:id/analytics/type-distribution", validate(repositoryIdParamSchema)
 // GET /api/repositories/:id/analytics/top-files - Retrieve top problematic files
 router.get("/:id/analytics/top-files", validate(repositoryIdParamSchema), getTopFilesAnalyticsHandler);
 
+// POST /api/repositories/:id/sync-commits - Sync commits & file changes and compute developer analytics
+router.post("/:id/sync-commits", validate(repositoryIdParamSchema), syncRepositoryCommitsHandler);
+
+// GET /api/repositories/:id/analytics/contributors - Retrieve contributor breakdown & stats
+router.get("/:id/analytics/contributors", validate(repositoryIdParamSchema), getRepositoryContributorsHandler);
+
+// GET /api/repositories/:id/analytics/activity - Retrieve commit activity timeline (day/week/month)
+router.get("/:id/analytics/activity", validate(repositoryIdParamSchema), getRepositoryActivityHandler);
+
+// GET /api/repositories/:id/analytics/heatmap - Retrieve commit heatmap (day-of-week x hour)
+router.get("/:id/analytics/heatmap", validate(repositoryIdParamSchema), getRepositoryHeatmapHandler);
+
+// GET /api/repositories/:id/analytics/hotspots - Retrieve file hotspots ranked by debt score
+router.get("/:id/analytics/hotspots", validate(repositoryIdParamSchema), getRepositoryHotspotsHandler);
+
+// GET /api/repositories/:id/analytics/technical-debt - Retrieve highest-risk technical debt files
+router.get("/:id/analytics/technical-debt", validate(repositoryIdParamSchema), getRepositoryTechnicalDebtHandler);
+
 export default router;
+
 
 

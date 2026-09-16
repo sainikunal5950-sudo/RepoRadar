@@ -53,7 +53,21 @@ export const PieChart = createIcon("PieChart");
 export const BarChart = createIcon("BarChart");
 export const BarChart3 = createIcon("BarChart3");
 export const TrendingUp = createIcon("TrendingUp");
+export const TrendingDown = createIcon("TrendingDown");
 export const Plus = createIcon("Plus");
+export const Users = createIcon("Users");
+export const User = createIcon("User");
+export const GitCommit = createIcon("GitCommit");
+export const Flame = createIcon("Flame");
+export const Award = createIcon("Award");
+export const FileWarning = createIcon("FileWarning");
+export const ArrowUpRight = createIcon("ArrowUpRight");
+export const CalendarDays = createIcon("CalendarDays");
+export const GitMerge = createIcon("GitMerge");
+export const Hourglass = createIcon("Hourglass");
+export const ArrowUpDown = createIcon("ArrowUpDown");
+
+
 
 // Export a fallback proxy for any other icons
 const icons = new Proxy(

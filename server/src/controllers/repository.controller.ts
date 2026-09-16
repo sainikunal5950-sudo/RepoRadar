@@ -6,6 +6,7 @@ import codeFetchService from "../services/code-fetch.service";
 import codeAnalysisService from "../services/code-analysis.service";
 import healthScoreService from "../services/health-score.service";
 import analyticsService from "../services/analytics.service";
+import developerAnalyticsService from "../services/developer-analytics.service";
 
 /**
  * POST /api/repositories/sync - Trigger GitHub repository list synchronization
@@ -317,5 +318,99 @@ export const getTopFilesAnalyticsHandler = asyncHandler(
     sendSuccess(res, topFiles, 200);
   }
 );
+
+/**
+ * POST /api/repositories/:id/sync-commits - Sync extended commits & file changes and compute analytics
+ */
+export const syncRepositoryCommitsHandler = asyncHandler(
+  async (req: Request, res: Response) => {
+    const id = (Array.isArray(req.params.id) ? req.params.id[0] : req.params.id) as string;
+    const result = await developerAnalyticsService.syncCommitData(req.user!.id, id);
+    sendSuccess(res, result, 200);
+  }
+);
+
+/**
+ * GET /api/repositories/:id/analytics/contributors - Retrieve contributor breakdown & stats
+ */
+export const getRepositoryContributorsHandler = asyncHandler(
+  async (req: Request, res: Response) => {
+    const id = (Array.isArray(req.params.id) ? req.params.id[0] : req.params.id) as string;
+    // Verify repository access
+    await repositoryService.getRepositoryMetrics(req.user!.id, id);
+    const contributors = await developerAnalyticsService.getContributorStats(id);
+    sendSuccess(res, contributors, 200);
+  }
+);
+
+/**
+ * GET /api/repositories/:id/analytics/activity - Retrieve commit activity timeline (day/week/month)
+ */
+export const getRepositoryActivityHandler = asyncHandler(
+  async (req: Request, res: Response) => {
+    const id = (Array.isArray(req.params.id) ? req.params.id[0] : req.params.id) as string;
+    // Verify repository access
+    await repositoryService.getRepositoryMetrics(req.user!.id, id);
+
+    const groupBy = (req.query.groupBy === "week" || req.query.groupBy === "month")
+      ? req.query.groupBy
+      : "day";
+
+    const from = req.query.from ? new Date(String(req.query.from)) : undefined;
+    const to = req.query.to ? new Date(String(req.query.to)) : undefined;
+
+    const timeline = await developerAnalyticsService.getCommitActivityTimeline(
+      id,
+      groupBy,
+      from,
+      to
+    );
+    sendSuccess(res, timeline, 200);
+  }
+);
+
+/**
+ * GET /api/repositories/:id/analytics/heatmap - Retrieve commit heatmap (day-of-week x hour)
+ */
+export const getRepositoryHeatmapHandler = asyncHandler(
+  async (req: Request, res: Response) => {
+    const id = (Array.isArray(req.params.id) ? req.params.id[0] : req.params.id) as string;
+    // Verify repository access
+    await repositoryService.getRepositoryMetrics(req.user!.id, id);
+
+    const heatmap = await developerAnalyticsService.getCommitHeatmapData(id);
+    sendSuccess(res, heatmap, 200);
+  }
+);
+
+/**
+ * GET /api/repositories/:id/analytics/hotspots - Retrieve file hotspots ranked by debt score
+ */
+export const getRepositoryHotspotsHandler = asyncHandler(
+  async (req: Request, res: Response) => {
+    const id = (Array.isArray(req.params.id) ? req.params.id[0] : req.params.id) as string;
+    // Verify repository access
+    await repositoryService.getRepositoryMetrics(req.user!.id, id);
+
+    const limit = req.query.limit ? parseInt(String(req.query.limit), 10) : 20;
+    const hotspots = await developerAnalyticsService.getFileHotspots(id, limit);
+    sendSuccess(res, hotspots, 200);
+  }
+);
+
+/**
+ * GET /api/repositories/:id/analytics/technical-debt - Retrieve highest-risk technical debt files with explanations
+ */
+export const getRepositoryTechnicalDebtHandler = asyncHandler(
+  async (req: Request, res: Response) => {
+    const id = (Array.isArray(req.params.id) ? req.params.id[0] : req.params.id) as string;
+    // Verify repository access
+    await repositoryService.getRepositoryMetrics(req.user!.id, id);
+
+    const debtSummary = await developerAnalyticsService.getTechnicalDebtSummary(id);
+    sendSuccess(res, debtSummary, 200);
+  }
+);
+
 
 

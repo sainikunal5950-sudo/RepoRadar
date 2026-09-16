@@ -227,6 +227,12 @@ export default function RepositoryHealthPage() {
             Overview
           </Link>
           <Link
+            href={`/dashboard/repositories/${repoId}/analytics`}
+            className="px-3 py-1.5 rounded-lg border border-[#222222] bg-[#141414] text-xs font-mono text-neutral-400 hover:text-white hover:border-neutral-700 transition-colors"
+          >
+            Dev Analytics
+          </Link>
+          <Link
             href={`/dashboard/repositories/${repoId}/code`}
             className="px-3 py-1.5 rounded-lg border border-[#222222] bg-[#141414] text-xs font-mono text-neutral-400 hover:text-white hover:border-neutral-700 transition-colors"
           >
@@ -238,6 +244,7 @@ export default function RepositoryHealthPage() {
           >
             Static Analysis
           </Link>
+
           <button
             onClick={handleRecalculateHealth}
             disabled={isRecalculating}

@@ -39,6 +39,9 @@ model Repository {
   metrics              RepositoryMetrics?
   languages            RepositoryLanguage[]
   commits              RepositoryCommit[]
+  commitFileChanges    CommitFileChange[]
+  contributorStats     ContributorStats[]
+  fileHotspots         FileHotspot[]
   files                RepositoryFile[]
   fileTree             RepositoryFileTree?
   codeIssues           CodeIssue[]
@@ -155,19 +158,96 @@ model RepositoryLanguage {
 }
 
 model RepositoryCommit {
-  id            String     @id @default(auto()) @map("_id") @db.ObjectId
-  repository_id String     @db.ObjectId
-  commit_sha    String
-  author        String
-  message       String
-  committed_at  DateTime
-  createdAt     DateTime   @default(now())
-  updatedAt     DateTime   @updatedAt
+  id                     String             @id @default(auto()) @map("_id") @db.ObjectId
+  repository_id          String             @db.ObjectId
+  commit_sha             String
+  author_name            String             @default("")
+  author_email           String             @default("")
+  author_github_username String?
+  author_avatar_url      String?
+  author                 String?            // Kept for backward compatibility
+  message                String
+  committed_at           DateTime
+  additions              Int                @default(0)
+  deletions              Int                @default(0)
+  files_changed_count    Int                @default(0)
+  createdAt              DateTime           @default(now())
+  updatedAt              DateTime           @updatedAt
 
-  repository    Repository @relation(fields: [repository_id], references: [id], onDelete: Cascade)
+  repository             Repository         @relation(fields: [repository_id], references: [id], onDelete: Cascade)
+  fileChanges            CommitFileChange[]
 
   @@unique([repository_id, commit_sha])
   @@index([repository_id])
+  @@index([repository_id, author_email])
+  @@index([repository_id, committed_at])
+}
+
+model CommitFileChange {
+  id            String           @id @default(auto()) @map("_id") @db.ObjectId
+  repository_id String           @db.ObjectId
+  commit_id     String           @db.ObjectId
+  commit_sha    String
+  file_path     String
+  change_type   String           // "added" | "modified" | "removed" | "renamed"
+  additions     Int              @default(0)
+  deletions     Int              @default(0)
+  createdAt     DateTime         @default(now())
+
+  repository    Repository       @relation(fields: [repository_id], references: [id], onDelete: Cascade)
+  commit        RepositoryCommit @relation(fields: [commit_id], references: [id], onDelete: Cascade)
+
+  @@index([repository_id])
+  @@index([commit_id])
+  @@index([repository_id, file_path])
+}
+
+model ContributorStats {
+  id                     String     @id @default(auto()) @map("_id") @db.ObjectId
+  repository_id          String     @db.ObjectId
+  author_email           String
+  author_name            String
+  author_github_username String?
+  author_avatar_url      String?
+  total_commits          Int        @default(0)
+  total_additions        Int        @default(0)
+  total_deletions        Int        @default(0)
+  files_touched_count    Int        @default(0)
+  first_commit_at        DateTime?
+  last_commit_at         DateTime?
+  contribution_percentage Float     @default(0)
+  calculated_at          DateTime   @default(now())
+  createdAt              DateTime   @default(now())
+  updatedAt              DateTime   @updatedAt
+
+  repository             Repository @relation(fields: [repository_id], references: [id], onDelete: Cascade)
+
+  @@unique([repository_id, author_email])
+  @@index([repository_id])
+  @@index([repository_id, total_commits])
+}
+
+model FileHotspot {
+  id                   String     @id @default(auto()) @map("_id") @db.ObjectId
+  repository_id        String     @db.ObjectId
+  file_path            String
+  change_count         Int        @default(0)
+  unique_authors_count Int        @default(0)
+  total_additions      Int        @default(0)
+  total_deletions      Int        @default(0)
+  issue_count          Int        @default(0)
+  critical_issue_count Int        @default(0)
+  debt_score           Float      @default(0)
+  last_modified_at     DateTime?
+  calculated_at        DateTime   @default(now())
+  createdAt            DateTime   @default(now())
+  updatedAt            DateTime   @updatedAt
+
+  repository           Repository @relation(fields: [repository_id], references: [id], onDelete: Cascade)
+
+  @@unique([repository_id, file_path])
+  @@index([repository_id])
+  @@index([repository_id, debt_score])
 }
 
 model Project {

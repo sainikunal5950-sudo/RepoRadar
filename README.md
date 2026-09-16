@@ -302,11 +302,46 @@ All API endpoints return standardized JSON responses:
 | `GET` | `/api/repositories/:id/analytics/severity-distribution` | **Yes (Bearer)** | Retrieve severity distribution for pie/donut charts | None |
 | `GET` | `/api/repositories/:id/analytics/type-distribution` | **Yes (Bearer)** | Retrieve issue category counts for bar charts | None |
 | `GET` | `/api/repositories/:id/analytics/top-files` | **Yes (Bearer)** | Retrieve top problematic files ranked by issue count (`?limit=10`) | None |
+| `POST` | `/api/repositories/:id/sync-commits` | **Yes (Bearer)** | Sync extended commits & file diffs, compute contributors & hotspots | None |
+| `GET` | `/api/repositories/:id/analytics/contributors` | **Yes (Bearer)** | Retrieve contributor leaderboard & statistics | None |
+| `GET` | `/api/repositories/:id/analytics/activity` | **Yes (Bearer)** | Retrieve commit activity timeline (`?groupBy=day\|week\|month`) | None |
+| `GET` | `/api/repositories/:id/analytics/heatmap` | **Yes (Bearer)** | Retrieve 7x24 commit punch card heatmap matrix | None |
+| `GET` | `/api/repositories/:id/analytics/hotspots` | **Yes (Bearer)** | Retrieve file hotspots ranked by technical debt score (`?limit=20`) | None |
+| `GET` | `/api/repositories/:id/analytics/technical-debt` | **Yes (Bearer)** | Retrieve highest-risk technical debt files with explanations | None |
 | `GET` | `/api/projects` | **Yes (Bearer)** | List all projects | None |
 | `POST` | `/api/projects` | **Yes (Bearer)** | Create a new project | `{ "name": string, "description"?: string }` |
 | `GET` | `/api/projects/:id` | **Yes (Bearer)** | Get project by ID | None |
 | `PATCH` | `/api/projects/:id` | **Yes (Bearer)** | Update project by ID | `{ "name"?: string, "description"?: string }` |
 | `DELETE` | `/api/projects/:id` | **Yes (Bearer)** | Delete project by ID | None |
+
+---
+
+### 👥 Developer Analytics & Hotspots Engine (Module 9)
+
+RepoRadar shifts focus from purely static code scanning to developer activity patterns, code churn, and hotspot identification:
+
+#### Contributor Breakdown & Leaderboard
+- Aggregates commits by author email/identity to calculate total commits, additions, deletions, distinct files touched, and percentage share of total repository commits.
+- Contributor Leaderboard showcases ranked contributor cards with avatar, profile links, activity ranges, and contribution proportion bars.
+- *Note on Git identity:* Git authors may commit under multiple emails. Stats group primarily by `author_email` with GitHub username association where available.
+
+#### Activity Timelines & Punch Card Coding Heatmap
+- **Activity Timeline Chart:** Dynamic time-series visualization grouping commits and diffs by **Day**, **Week**, or **Month** using Recharts.
+- **Punch Card Heatmap (7 Days × 24 Hours):** Matrix grid displaying commit density across days of the week and hours of the day, uncovering when engineering teams code most.
+
+#### Hotspots & Technical Debt Risk Scoring
+- **Hotspot Detection:** Identifies files modified most frequently and by multiple distinct authors.
+- **Technical Debt Score (0 - 100):** Cross-references commit churn with Module 7 static `CodeIssue` severity density. Files that combine high change frequency with open critical issues carry the highest risk of regression.
+  $$\text{Debt Score} = \min\left(100, (\text{Normalized Change Frequency} \times 50) + (\text{Normalized Issue Weight} \times 50)\right)$$
+  Where issues are weighted by severity: Critical (10×), High (5×), Medium (2×), Low (1×).
+- **Risk Cards:** Explanatory highlight cards providing human-readable context (e.g., *"Modified 34 times by 5 authors with 6 issues (2 critical). High churn combined with open issues elevates regression risk."*).
+- **Explorer Integration:** Click any hotspot file path to immediately inspect it in the Module 6 Code Explorer.
+
+#### GitHub API Rate Limiting & Incremental Sync
+- **Incremental Syncing:** Utilizes the `since` timestamp of the latest stored commit to only fetch newly created commits on subsequent syncs.
+- **Batch Throttling:** Commit file changes are fetched concurrently in configurable batches (`COMMIT_SYNC_BATCH_SIZE=20`) capped at `MAX_COMMITS_TO_SYNC=500`.
+- **Remaining Limit Checks:** Server verifies remaining GitHub API limits prior to syncing and reports remaining quotas.
+
 
 ---
 
@@ -369,8 +404,9 @@ The frontend implements a dark monochrome aesthetic inspired by Vercel, Linear, 
 - [x] **Module 6:** Source Code Ingestion, Indexing, File Tree & VS Code-like Code Explorer (`/dashboard/repositories/:id/code`, Prism syntax highlighter, collapsible Tree).
 - [x] **Module 7:** Static Rule-Based Code Analysis Engine & Dashboard (`/dashboard/repositories/:id/analysis`, Security/Bug/Performance/Code-Smell scanning, filterable Issue Table, Analysis Summary).
 - [x] **Module 8:** Health Radar Scorecard, Analytics Engine & Interactive Visualizer (`/dashboard/repositories/:id/health`, Recharts visualizations, Grade badges, Worst-First multi-repo overview).
-- [ ] **Module 9:** Automated Remediation Suggestions & Fix Generation Pipeline.
-- [ ] **Module 10:** AI-Powered Codebase Synthesis & Architectural Insights.
+- [x] **Module 9:** Developer Analytics, Activity Heatmap & Technical Debt Hotspot Engine (`/dashboard/repositories/:id/analytics`, Contributor Leaderboard, Recharts Timeline, 7x24 Punch Card Heatmap, Hotspot Churn & Debt Score).
+- [ ] **Module 10:** Automated Remediation Suggestions & AI Synthesis.
+
 
 ---
 

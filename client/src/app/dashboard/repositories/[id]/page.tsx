@@ -205,7 +205,14 @@ export default function RepositoryDetailPage() {
           </div>
 
           {/* Action Buttons */}
-          <div className="flex flex-wrap items-center gap-3 shrink-0">
+            <Link
+              href={`/dashboard/repositories/${repoId}/analytics`}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#181818] hover:bg-[#222222] border border-[#2E2E2E] hover:border-neutral-500 text-white font-semibold text-xs transition-all cursor-pointer"
+            >
+              <Activity className="w-3.5 h-3.5 text-indigo-400" />
+              <span>Dev Analytics</span>
+            </Link>
+
             <Link
               href={`/dashboard/repositories/${repoId}/health`}
               className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#181818] hover:bg-[#222222] border border-[#2E2E2E] hover:border-neutral-500 text-white font-semibold text-xs transition-all cursor-pointer"
@@ -229,6 +236,7 @@ export default function RepositoryDetailPage() {
               <FolderGit2 className="w-3.5 h-3.5 text-emerald-400" />
               <span>Explore Code Tree</span>
             </Link>
+
 
             <button
               type="button"
