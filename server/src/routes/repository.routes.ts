@@ -11,10 +11,18 @@ import {
   getRepositoryFileTreeHandler,
   getRepositoryFilesHandler,
   getRepositoryFileContentHandler,
+  analyzeRepositoryCodeHandler,
+  getRepositoryAnalysisSummaryHandler,
+  getRepositoryAnalysisResultsHandler,
+  getRepositoryFileAnalysisResultsHandler,
 } from "../controllers/repository.controller";
 import authMiddleware from "../middleware/authMiddleware";
 import validate from "../middleware/validate";
-import { repositoryIdParamSchema } from "../schemas/repository.schema";
+import {
+  repositoryIdParamSchema,
+  analysisQuerySchema,
+  analysisFileParamsSchema,
+} from "../schemas/repository.schema";
 
 const router = Router();
 
@@ -54,4 +62,17 @@ router.get("/:id/files", validate(repositoryIdParamSchema), getRepositoryFilesHa
 // GET /api/repositories/:id/files/:fileId - Retrieve content of a single file
 router.get("/:id/files/:fileId", validate(repositoryIdParamSchema), getRepositoryFileContentHandler);
 
+// POST /api/repositories/:id/analyze-code - Run static rule-based analysis on fetched code
+router.post("/:id/analyze-code", validate(repositoryIdParamSchema), analyzeRepositoryCodeHandler);
+
+// GET /api/repositories/:id/analysis-summary - Retrieve rolled-up analysis summary
+router.get("/:id/analysis-summary", validate(repositoryIdParamSchema), getRepositoryAnalysisSummaryHandler);
+
+// GET /api/repositories/:id/analysis-results - Retrieve paginated & filterable analysis issues
+router.get("/:id/analysis-results", validate(analysisQuerySchema), getRepositoryAnalysisResultsHandler);
+
+// GET /api/repositories/:id/analysis-results/:fileId - Retrieve issues for a specific file
+router.get("/:id/analysis-results/:fileId", validate(analysisFileParamsSchema), getRepositoryFileAnalysisResultsHandler);
+
 export default router;
+

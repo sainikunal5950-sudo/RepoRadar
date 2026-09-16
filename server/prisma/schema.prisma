@@ -41,12 +41,56 @@ model Repository {
   commits              RepositoryCommit[]
   files                RepositoryFile[]
   fileTree             RepositoryFileTree?
+  codeIssues           CodeIssue[]
+  analysisSummary      AnalysisSummary?
   createdAt            DateTime             @default(now())
   updatedAt            DateTime             @updatedAt
 
   user                 User                 @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   @@index([user_id])
+}
+
+model CodeIssue {
+  id              String     @id @default(auto()) @map("_id") @db.ObjectId
+  repository_id   String     @db.ObjectId
+  file_path       String
+  line_number     Int
+  column_number   Int?
+  issue_type      String     // "security" | "performance" | "bug" | "code-smell" | "maintainability"
+  severity        String     // "critical" | "high" | "medium" | "low"
+  message         String
+  suggested_fix   String?
+  code_snippet    String?
+  rule_id         String?
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  repository      Repository @relation(fields: [repository_id], references: [id], onDelete: Cascade)
+
+  @@index([repository_id])
+  @@index([repository_id, severity])
+  @@index([repository_id, issue_type])
+}
+
+model AnalysisSummary {
+  id                        String     @id @default(auto()) @map("_id") @db.ObjectId
+  repository_id             String     @unique @db.ObjectId
+  total_issues              Int        @default(0)
+  critical_count            Int        @default(0)
+  high_count                Int        @default(0)
+  medium_count              Int        @default(0)
+  low_count                 Int        @default(0)
+  security_issues_count     Int        @default(0)
+  performance_issues_count  Int        @default(0)
+  bug_issues_count          Int        @default(0)
+  code_smell_count          Int        @default(0)
+  maintainability_count     Int        @default(0)
+  analysis_completed_at     DateTime?
+  createdAt                 DateTime   @default(now())
+  updatedAt                 DateTime   @updatedAt
+
+  repository                Repository @relation(fields: [repository_id], references: [id], onDelete: Cascade)
 }
 
 model RepositoryFile {

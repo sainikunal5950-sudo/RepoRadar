@@ -133,6 +133,31 @@ Authorization: Bearer {{authToken}}
 Accept: application/json
 
 ### ====================================================================
+### Static Rule-Based Code Analysis Endpoints (Module 7 - Protected)
+### ====================================================================
+
+### 19. Run Static Code Analysis on Repository
+# @name analyzeRepositoryCode
+POST {{baseUrl}}/api/repositories/{{repoId}}/analyze-code
+Authorization: Bearer {{authToken}}
+Accept: application/json
+
+### 20. Get Repository Analysis Summary (Rolled-up Metrics)
+GET {{baseUrl}}/api/repositories/{{repoId}}/analysis-summary
+Authorization: Bearer {{authToken}}
+Accept: application/json
+
+### 21. Get Paginated & Filtered Code Analysis Issues
+GET {{baseUrl}}/api/repositories/{{repoId}}/analysis-results?severity=critical&issueType=security&page=1&limit=20
+Authorization: Bearer {{authToken}}
+Accept: application/json
+
+### 22. Get Analysis Issues for a Specific File
+GET {{baseUrl}}/api/repositories/{{repoId}}/analysis-results/65d75cf9e1d84f23b890abcf
+Authorization: Bearer {{authToken}}
+Accept: application/json
+
+### ====================================================================
 ### Protected Project Resource Endpoints (Requires Authorization Header)
 ### ====================================================================
 

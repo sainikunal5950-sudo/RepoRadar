@@ -15,6 +15,7 @@ import {
   ExternalLink,
   Github,
   Layers,
+  ShieldCheck,
 } from "lucide-react";
 import apiClient from "@/lib/api-client";
 import FileTree, { TreeNode } from "@/components/ui/FileTree";
@@ -213,6 +214,14 @@ export default function RepositoryCodeExplorerPage() {
 
         {/* Action Button */}
         <div className="flex items-center gap-3 shrink-0">
+          <Link
+            href={`/dashboard/repositories/${repoId}/analysis`}
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#161616] hover:bg-[#202020] border border-[#2A2A2A] text-neutral-300 hover:text-white text-xs font-mono transition-colors"
+          >
+            <ShieldCheck className="w-3.5 h-3.5 text-blue-400" />
+            <span>Static Analysis</span>
+          </Link>
+
           <Link
             href={`/dashboard/repositories/${repoId}`}
             className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#161616] hover:bg-[#202020] border border-[#2A2A2A] text-neutral-300 hover:text-white text-xs font-mono transition-colors"

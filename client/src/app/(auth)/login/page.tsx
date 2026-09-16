@@ -214,7 +214,6 @@ export default function LoginPage() {
             </div>
           </form>
         </div>
-
         <div className="mt-8 text-center text-xs text-neutral-500 font-mono">
           <span>Protected by RepoRadar JWT Token & AES-256 Encryption</span>
         </div>

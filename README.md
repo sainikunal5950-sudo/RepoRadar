@@ -291,6 +291,10 @@ All API endpoints return standardized JSON responses:
 | `GET` | `/api/repositories/:id/files/tree` | **Yes (Bearer)** | Retrieve stored hierarchical file tree | None |
 | `GET` | `/api/repositories/:id/files` | **Yes (Bearer)** | Retrieve paginated file metadata (`?page=1&limit=50&language=typescript`) | None |
 | `GET` | `/api/repositories/:id/files/:fileId` | **Yes (Bearer)** | Retrieve content of a single file | None |
+| `POST` | `/api/repositories/:id/analyze-code` | **Yes (Bearer)** | Run static rule-based analysis on fetched code | None |
+| `GET` | `/api/repositories/:id/analysis-summary` | **Yes (Bearer)** | Retrieve rolled-up analysis metrics for repository | None |
+| `GET` | `/api/repositories/:id/analysis-results` | **Yes (Bearer)** | Retrieve paginated & filterable code issues (`?severity=critical&issueType=security`) | None |
+| `GET` | `/api/repositories/:id/analysis-results/:fileId` | **Yes (Bearer)** | Retrieve issues for a specific file | None |
 | `GET` | `/api/projects` | **Yes (Bearer)** | List all projects | None |
 | `POST` | `/api/projects` | **Yes (Bearer)** | Create a new project | `{ "name": string, "description"?: string }` |
 | `GET` | `/api/projects/:id` | **Yes (Bearer)** | Get project by ID | None |
@@ -299,9 +303,43 @@ All API endpoints return standardized JSON responses:
 
 ---
 
+### 🔍 Static Rule-Based Code Analysis Engine (Module 7)
+
+RepoRadar includes a deterministic, rule-based static analysis engine that scans stored repository files for issues across 5 core categories:
+
+1. **Security Vulnerabilities**
+   - Hardcoded secrets, API tokens, AWS keys, and private keys
+   - SQL Injection vulnerabilities (string concatenation & unescaped template literals into queries)
+   - Cross-Site Scripting (XSS) patterns (`innerHTML`, `eval()`, `dangerouslySetInnerHTML`, `document.write`)
+   - Insecure cryptographic algorithms (MD5, SHA-1, DES, RC4)
+
+2. **Bugs & Logic Hazards**
+   - Declared variables that are never read or referenced
+   - Unreachable statements following unconditional `return`, `throw`, `break`, or `continue`
+   - Unsafe property chaining without optional chaining or null checks (DOM queries, array `.find()`)
+
+3. **Performance Anti-Patterns**
+   - Synchronous blocking I/O calls (`readFileSync`, `writeFileSync`, `execSync`) in execution paths
+   - Nested loops generating potential $O(n^2)$ complexity
+   - Linear searches (`.find()`, `.includes()`, `.indexOf()`) or array spreads inside loops
+
+4. **Code Smells & Maintainability**
+   - Long functions exceeding 50 lines of code
+   - Missing JSDoc documentation on exported functions and classes
+   - High cyclomatic complexity (> 10 decision branches)
+   - Deeply nested conditional structures (> 3 indentation levels)
+
+#### Severity Levels
+- 🔴 **Critical:** Immediate security risks (hardcoded credentials, SQLi, eval)
+- 🟠 **High:** Serious logic risks (XSS, synchronous blocking I/O, unreachable code)
+- 🟡 **Medium:** Performance hazards and potential runtime errors (nested loops, weak crypto, missing null checks)
+- ⚪ **Low:** Maintainability suggestions and code smells (long functions, missing docs)
+
+---
+
 ### 🧪 Testing the API
 
-A complete REST test suite is included in [`server/requests.http`](file:///c:/Users/ASUS/OneDrive/Desktop/BEE/server/requests.http). You can execute authentication, GitHub OAuth user sync, repository syncing, detailed telemetry ingestion, source code indexing, selection toggling, and error edge cases using the VS Code **REST Client** extension, Postman, or `curl`.
+A complete REST test suite is included in [`server/requests.http`](file:///c:/Users/ASUS/OneDrive/Desktop/BEE/server/requests.http). You can execute authentication, GitHub OAuth user sync, repository syncing, detailed telemetry ingestion, source code indexing, static code analysis, selection toggling, and error edge cases using the VS Code **REST Client** extension, Postman, or `curl`.
 
 ---
 
@@ -325,7 +363,7 @@ The frontend implements a dark monochrome aesthetic inspired by Vercel, Linear, 
 - [x] **Module 4:** GitHub Repository Ingestion & Selection Management (Octokit REST SDK, Repository MongoDB model, encrypted token decryption, sync & selection API, `/dashboard/repositories` UI).
 - [x] **Module 5:** Detailed GitHub Telemetry, Metrics & Interactive Dashboard (Metrics, Language percentage breakdown, Commits timeline, `/dashboard` Overview grid, `/dashboard/repositories/:id` detail view).
 - [x] **Module 6:** Source Code Ingestion, Indexing, File Tree & VS Code-like Code Explorer (`/dashboard/repositories/:id/code`, Prism syntax highlighter, collapsible Tree).
-- [ ] **Module 7:** Static AST Code Quality & Dependency Vulnerability Scanning Engine.
+- [x] **Module 7:** Static Rule-Based Code Analysis Engine & Dashboard (`/dashboard/repositories/:id/analysis`, Security/Bug/Performance/Code-Smell scanning, filterable Issue Table, Analysis Summary).
 - [ ] **Module 8:** AI-Synthesized Health Radar Scorecard & Interactive Visualizer.
 
 ---

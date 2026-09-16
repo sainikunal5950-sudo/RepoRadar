@@ -3,6 +3,7 @@ import asyncHandler from "../lib/asyncHandler";
 import { sendSuccess } from "../lib/response";
 import repositoryService from "../services/repository.service";
 import codeFetchService from "../services/code-fetch.service";
+import codeAnalysisService from "../services/code-analysis.service";
 
 /**
  * POST /api/repositories/sync - Trigger GitHub repository list synchronization
@@ -173,3 +174,68 @@ export const getRepositoryFileContentHandler = asyncHandler(
     sendSuccess(res, file, 200);
   }
 );
+
+/**
+ * POST /api/repositories/:id/analyze-code - Run static rule-based analysis on fetched code
+ */
+export const analyzeRepositoryCodeHandler = asyncHandler(
+  async (req: Request, res: Response) => {
+    const id = (Array.isArray(req.params.id) ? req.params.id[0] : req.params.id) as string;
+    const result = await codeAnalysisService.analyzeRepository(id, req.user!.id);
+    sendSuccess(res, result, 200);
+  }
+);
+
+/**
+ * GET /api/repositories/:id/analysis-summary - Retrieve rolled-up analysis summary
+ */
+export const getRepositoryAnalysisSummaryHandler = asyncHandler(
+  async (req: Request, res: Response) => {
+    const id = (Array.isArray(req.params.id) ? req.params.id[0] : req.params.id) as string;
+    const summary = await codeAnalysisService.getAnalysisSummary(id, req.user!.id);
+    sendSuccess(res, summary, 200);
+  }
+);
+
+/**
+ * GET /api/repositories/:id/analysis-results - Retrieve paginated & filterable analysis issues
+ */
+export const getRepositoryAnalysisResultsHandler = asyncHandler(
+  async (req: Request, res: Response) => {
+    const id = (Array.isArray(req.params.id) ? req.params.id[0] : req.params.id) as string;
+    const { severity, issueType, filePath, search, page, limit, offset } = req.query as Record<string, any>;
+
+    const results = await codeAnalysisService.getAnalysisIssues(
+      id,
+      req.user!.id,
+      {
+        severity,
+        issueType,
+        filePath,
+        search,
+        page: page ? parseInt(String(page), 10) : undefined,
+        limit: limit ? parseInt(String(limit), 10) : undefined,
+        offset: offset ? parseInt(String(offset), 10) : undefined,
+      }
+    );
+    sendSuccess(res, results, 200);
+  }
+);
+
+/**
+ * GET /api/repositories/:id/analysis-results/:fileId - Retrieve issues for a specific file
+ */
+export const getRepositoryFileAnalysisResultsHandler = asyncHandler(
+  async (req: Request, res: Response) => {
+    const id = (Array.isArray(req.params.id) ? req.params.id[0] : req.params.id) as string;
+    const fileId = (Array.isArray(req.params.fileId) ? req.params.fileId[0] : req.params.fileId) as string;
+
+    const issues = await codeAnalysisService.getFileAnalysisIssues(
+      id,
+      fileId,
+      req.user!.id
+    );
+    sendSuccess(res, issues, 200);
+  }
+);
+

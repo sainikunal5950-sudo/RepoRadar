@@ -18,6 +18,7 @@ import {
   Loader2,
   Sparkles,
   Github,
+  ShieldCheck,
 } from "lucide-react";
 import apiClient from "@/lib/api-client";
 import LanguageChart, { LanguageItem } from "@/components/ui/LanguageChart";
@@ -204,6 +205,14 @@ export default function RepositoryDetailPage() {
 
           {/* Action Buttons */}
           <div className="flex flex-wrap items-center gap-3 shrink-0">
+            <Link
+              href={`/dashboard/repositories/${repoId}/analysis`}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#181818] hover:bg-[#222222] border border-[#2E2E2E] hover:border-neutral-500 text-white font-semibold text-xs transition-all cursor-pointer"
+            >
+              <ShieldCheck className="w-3.5 h-3.5 text-blue-400" />
+              <span>Static Analysis</span>
+            </Link>
+
             <Link
               href={`/dashboard/repositories/${repoId}/code`}
               className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#181818] hover:bg-[#222222] border border-[#2E2E2E] hover:border-neutral-500 text-white font-semibold text-xs transition-all cursor-pointer"
