@@ -6,7 +6,7 @@ const createIcon = (name: string) => {
   return Icon;
 };
 
-// Explicit exports for common icons
+// Explicit exports for all icons used across client components
 export const Folder = createIcon("Folder");
 export const FolderOpen = createIcon("FolderOpen");
 export const FileCode = createIcon("FileCode");
@@ -23,6 +23,7 @@ export const AlertCircle = createIcon("AlertCircle");
 export const AlertTriangle = createIcon("AlertTriangle");
 export const Loader2 = createIcon("Loader2");
 export const ArrowLeft = createIcon("ArrowLeft");
+export const ArrowRight = createIcon("ArrowRight");
 export const FolderGit2 = createIcon("FolderGit2");
 export const RefreshCw = createIcon("RefreshCw");
 export const CheckCircle = createIcon("CheckCircle");
@@ -48,6 +49,11 @@ export const Code2 = createIcon("Code2");
 export const Star = createIcon("Star");
 export const GitFork = createIcon("GitFork");
 export const GitPullRequest = createIcon("GitPullRequest");
+export const PieChart = createIcon("PieChart");
+export const BarChart = createIcon("BarChart");
+export const BarChart3 = createIcon("BarChart3");
+export const TrendingUp = createIcon("TrendingUp");
+export const Plus = createIcon("Plus");
 
 // Export a fallback proxy for any other icons
 const icons = new Proxy(

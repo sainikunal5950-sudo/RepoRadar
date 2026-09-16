@@ -180,7 +180,7 @@ export default function RepositoryAnalysisPage() {
         </div>
 
         {/* View Switcher / Tabs */}
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Link
             href={`/dashboard/repositories/${repoId}`}
             className="px-3 py-1.5 rounded-lg border border-[#222222] bg-[#141414] text-xs font-mono text-neutral-400 hover:text-white hover:border-neutral-700 transition-colors"
@@ -192,6 +192,12 @@ export default function RepositoryAnalysisPage() {
             className="px-3 py-1.5 rounded-lg border border-[#222222] bg-[#141414] text-xs font-mono text-neutral-400 hover:text-white hover:border-neutral-700 transition-colors"
           >
             Code Explorer
+          </Link>
+          <Link
+            href={`/dashboard/repositories/${repoId}/health`}
+            className="px-3 py-1.5 rounded-lg border border-[#222222] bg-[#141414] text-xs font-mono text-neutral-400 hover:text-white hover:border-neutral-700 transition-colors"
+          >
+            Health Scorecard
           </Link>
           <button
             onClick={handleTriggerAnalysis}

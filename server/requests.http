@@ -158,6 +158,46 @@ Authorization: Bearer {{authToken}}
 Accept: application/json
 
 ### ====================================================================
+### Repository Health Radar & Visual Analytics Endpoints (Module 8 - Protected)
+### ====================================================================
+
+### 23. Calculate Repository Health Scores & Letter Grade
+# @name calculateHealthScores
+POST {{baseUrl}}/api/repositories/{{repoId}}/calculate-health
+Authorization: Bearer {{authToken}}
+Accept: application/json
+
+### 24. Get Latest Health Scorecard
+GET {{baseUrl}}/api/repositories/{{repoId}}/health
+Authorization: Bearer {{authToken}}
+Accept: application/json
+
+### 25. Get Health Score History Trends
+GET {{baseUrl}}/api/repositories/{{repoId}}/health/history
+Authorization: Bearer {{authToken}}
+Accept: application/json
+
+### 26. Get Health Overview Across All User Repositories
+GET {{baseUrl}}/api/repositories/health-overview
+Authorization: Bearer {{authToken}}
+Accept: application/json
+
+### 27. Get Issue Distribution by Severity (Pie Chart Data)
+GET {{baseUrl}}/api/repositories/{{repoId}}/analytics/severity-distribution
+Authorization: Bearer {{authToken}}
+Accept: application/json
+
+### 28. Get Issue Distribution by Category (Bar Chart Data)
+GET {{baseUrl}}/api/repositories/{{repoId}}/analytics/type-distribution
+Authorization: Bearer {{authToken}}
+Accept: application/json
+
+### 29. Get Top Problematic Files (Horizontal Bar Chart Data)
+GET {{baseUrl}}/api/repositories/{{repoId}}/analytics/top-files?limit=10
+Authorization: Bearer {{authToken}}
+Accept: application/json
+
+### ====================================================================
 ### Protected Project Resource Endpoints (Requires Authorization Header)
 ### ====================================================================
 

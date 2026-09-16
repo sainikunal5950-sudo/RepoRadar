@@ -15,6 +15,13 @@ import {
   getRepositoryAnalysisSummaryHandler,
   getRepositoryAnalysisResultsHandler,
   getRepositoryFileAnalysisResultsHandler,
+  calculateRepositoryHealthHandler,
+  getRepositoryHealthHandler,
+  getRepositoryHealthHistoryHandler,
+  getUserRepositoriesHealthOverviewHandler,
+  getSeverityDistributionAnalyticsHandler,
+  getTypeDistributionAnalyticsHandler,
+  getTopFilesAnalyticsHandler,
 } from "../controllers/repository.controller";
 import authMiddleware from "../middleware/authMiddleware";
 import validate from "../middleware/validate";
@@ -28,6 +35,9 @@ const router = Router();
 
 // Protect all repository endpoints with JWT authentication
 router.use(authMiddleware);
+
+// GET /api/repositories/health-overview - Multi-repository health overview (before :id)
+router.get("/health-overview", getUserRepositoriesHealthOverviewHandler);
 
 // POST /api/repositories/sync - Sync user's GitHub repositories list
 router.post("/sync", syncRepositoriesHandler);
@@ -74,5 +84,24 @@ router.get("/:id/analysis-results", validate(analysisQuerySchema), getRepository
 // GET /api/repositories/:id/analysis-results/:fileId - Retrieve issues for a specific file
 router.get("/:id/analysis-results/:fileId", validate(analysisFileParamsSchema), getRepositoryFileAnalysisResultsHandler);
 
+// POST /api/repositories/:id/calculate-health - Calculate health scores & letter grade
+router.post("/:id/calculate-health", validate(repositoryIdParamSchema), calculateRepositoryHealthHandler);
+
+// GET /api/repositories/:id/health - Retrieve latest health score record
+router.get("/:id/health", validate(repositoryIdParamSchema), getRepositoryHealthHandler);
+
+// GET /api/repositories/:id/health/history - Retrieve historical health scores
+router.get("/:id/health/history", validate(repositoryIdParamSchema), getRepositoryHealthHistoryHandler);
+
+// GET /api/repositories/:id/analytics/severity-distribution - Retrieve severity distribution for pie chart
+router.get("/:id/analytics/severity-distribution", validate(repositoryIdParamSchema), getSeverityDistributionAnalyticsHandler);
+
+// GET /api/repositories/:id/analytics/type-distribution - Retrieve issue type distribution for bar chart
+router.get("/:id/analytics/type-distribution", validate(repositoryIdParamSchema), getTypeDistributionAnalyticsHandler);
+
+// GET /api/repositories/:id/analytics/top-files - Retrieve top problematic files
+router.get("/:id/analytics/top-files", validate(repositoryIdParamSchema), getTopFilesAnalyticsHandler);
+
 export default router;
+
 

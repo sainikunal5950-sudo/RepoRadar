@@ -295,6 +295,13 @@ All API endpoints return standardized JSON responses:
 | `GET` | `/api/repositories/:id/analysis-summary` | **Yes (Bearer)** | Retrieve rolled-up analysis metrics for repository | None |
 | `GET` | `/api/repositories/:id/analysis-results` | **Yes (Bearer)** | Retrieve paginated & filterable code issues (`?severity=critical&issueType=security`) | None |
 | `GET` | `/api/repositories/:id/analysis-results/:fileId` | **Yes (Bearer)** | Retrieve issues for a specific file | None |
+| `POST` | `/api/repositories/:id/calculate-health` | **Yes (Bearer)** | Compute weighted health scores, letter grades & persist history | None |
+| `GET` | `/api/repositories/:id/health` | **Yes (Bearer)** | Retrieve latest repository health scorecard | None |
+| `GET` | `/api/repositories/:id/health/history` | **Yes (Bearer)** | Retrieve chronological health score history for trend tracking | None |
+| `GET` | `/api/repositories/health-overview` | **Yes (Bearer)** | Retrieve health overview and global metrics across all user repos | None |
+| `GET` | `/api/repositories/:id/analytics/severity-distribution` | **Yes (Bearer)** | Retrieve severity distribution for pie/donut charts | None |
+| `GET` | `/api/repositories/:id/analytics/type-distribution` | **Yes (Bearer)** | Retrieve issue category counts for bar charts | None |
+| `GET` | `/api/repositories/:id/analytics/top-files` | **Yes (Bearer)** | Retrieve top problematic files ranked by issue count (`?limit=10`) | None |
 | `GET` | `/api/projects` | **Yes (Bearer)** | List all projects | None |
 | `POST` | `/api/projects` | **Yes (Bearer)** | Create a new project | `{ "name": string, "description"?: string }` |
 | `GET` | `/api/projects/:id` | **Yes (Bearer)** | Get project by ID | None |
@@ -303,43 +310,40 @@ All API endpoints return standardized JSON responses:
 
 ---
 
-### 🔍 Static Rule-Based Code Analysis Engine (Module 7)
+### 🛡️ Health Radar Scorecard & Analytics Engine (Module 8)
 
-RepoRadar includes a deterministic, rule-based static analysis engine that scans stored repository files for issues across 5 core categories:
+RepoRadar converts raw static issues into explainable, normalized health metrics (0 to 100) and letter grades (A, B, C, D, F):
 
-1. **Security Vulnerabilities**
-   - Hardcoded secrets, API tokens, AWS keys, and private keys
-   - SQL Injection vulnerabilities (string concatenation & unescaped template literals into queries)
-   - Cross-Site Scripting (XSS) patterns (`innerHTML`, `eval()`, `dangerouslySetInnerHTML`, `document.write`)
-   - Insecure cryptographic algorithms (MD5, SHA-1, DES, RC4)
+#### Scoring Weights & Dimensions
+- **Security Score (40%):** Deductions for secrets, SQL injection, XSS, and weak cryptography.
+- **Code Quality Score (25%):** Deductions for bugs, logic hazards, unused variables, and unreachable code.
+- **Maintainability Score (20%):** Deductions for code smells, oversized functions, missing documentation, and high complexity.
+- **Performance Score (15%):** Deductions for synchronous blocking I/O calls, nested loops, and linear searches.
 
-2. **Bugs & Logic Hazards**
-   - Declared variables that are never read or referenced
-   - Unreachable statements following unconditional `return`, `throw`, `break`, or `continue`
-   - Unsafe property chaining without optional chaining or null checks (DOM queries, array `.find()`)
+#### Codebase Normalization & Severity Weights
+- Point deductions scale by severity: **Critical (-10)**, **High (-5)**, **Medium (-2)**, **Low (-0.5)**.
+- Deductions are normalized relative to codebase scale so larger codebases are not unfairly penalized.
+- Overall Score formula:
+  $$\text{Overall} = (0.40 \times \text{Security}) + (0.25 \times \text{Quality}) + (0.20 \times \text{Maintainability}) + (0.15 \times \text{Performance})$$
 
-3. **Performance Anti-Patterns**
-   - Synchronous blocking I/O calls (`readFileSync`, `writeFileSync`, `execSync`) in execution paths
-   - Nested loops generating potential $O(n^2)$ complexity
-   - Linear searches (`.find()`, `.includes()`, `.indexOf()`) or array spreads inside loops
+#### Letter Grade Boundaries
+- **A (90 - 100):** Optimal health, robust code quality & high security integrity.
+- **B (75 - 89):** Good condition with minor code smells.
+- **C (60 - 74):** Fair condition with moderate technical debt.
+- **D (40 - 59):** Degraded health with significant vulnerabilities.
+- **F (< 40):** Critical attention required.
 
-4. **Code Smells & Maintainability**
-   - Long functions exceeding 50 lines of code
-   - Missing JSDoc documentation on exported functions and classes
-   - High cyclomatic complexity (> 10 decision branches)
-   - Deeply nested conditional structures (> 3 indentation levels)
-
-#### Severity Levels
-- 🔴 **Critical:** Immediate security risks (hardcoded credentials, SQLi, eval)
-- 🟠 **High:** Serious logic risks (XSS, synchronous blocking I/O, unreachable code)
-- 🟡 **Medium:** Performance hazards and potential runtime errors (nested loops, weak crypto, missing null checks)
-- ⚪ **Low:** Maintainability suggestions and code smells (long functions, missing docs)
+#### Visual Analytics
+- **Severity Distribution:** Interactive Donut / Pie chart.
+- **Issue Type Distribution:** Category-by-category Bar chart.
+- **Top Problematic Files:** Ranked file list with stacked severity progress bars and click-to-inspect links.
+- **Historical Score Trend:** Recharts Line chart showing score progression across scans over time.
 
 ---
 
 ### 🧪 Testing the API
 
-A complete REST test suite is included in [`server/requests.http`](file:///c:/Users/ASUS/OneDrive/Desktop/BEE/server/requests.http). You can execute authentication, GitHub OAuth user sync, repository syncing, detailed telemetry ingestion, source code indexing, static code analysis, selection toggling, and error edge cases using the VS Code **REST Client** extension, Postman, or `curl`.
+A complete REST test suite is included in [`server/requests.http`](file:///c:/Users/ASUS/OneDrive/Desktop/BEE/server/requests.http). You can execute authentication, GitHub OAuth user sync, repository syncing, detailed telemetry ingestion, source code indexing, static code analysis, health score calculation, selection toggling, and error edge cases using the VS Code **REST Client** extension, Postman, or `curl`.
 
 ---
 
@@ -364,7 +368,9 @@ The frontend implements a dark monochrome aesthetic inspired by Vercel, Linear, 
 - [x] **Module 5:** Detailed GitHub Telemetry, Metrics & Interactive Dashboard (Metrics, Language percentage breakdown, Commits timeline, `/dashboard` Overview grid, `/dashboard/repositories/:id` detail view).
 - [x] **Module 6:** Source Code Ingestion, Indexing, File Tree & VS Code-like Code Explorer (`/dashboard/repositories/:id/code`, Prism syntax highlighter, collapsible Tree).
 - [x] **Module 7:** Static Rule-Based Code Analysis Engine & Dashboard (`/dashboard/repositories/:id/analysis`, Security/Bug/Performance/Code-Smell scanning, filterable Issue Table, Analysis Summary).
-- [ ] **Module 8:** AI-Synthesized Health Radar Scorecard & Interactive Visualizer.
+- [x] **Module 8:** Health Radar Scorecard, Analytics Engine & Interactive Visualizer (`/dashboard/repositories/:id/health`, Recharts visualizations, Grade badges, Worst-First multi-repo overview).
+- [ ] **Module 9:** Automated Remediation Suggestions & Fix Generation Pipeline.
+- [ ] **Module 10:** AI-Powered Codebase Synthesis & Architectural Insights.
 
 ---
 

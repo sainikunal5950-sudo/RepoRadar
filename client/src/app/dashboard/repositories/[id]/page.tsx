@@ -19,6 +19,7 @@ import {
   Sparkles,
   Github,
   ShieldCheck,
+  Activity,
 } from "lucide-react";
 import apiClient from "@/lib/api-client";
 import LanguageChart, { LanguageItem } from "@/components/ui/LanguageChart";
@@ -205,6 +206,14 @@ export default function RepositoryDetailPage() {
 
           {/* Action Buttons */}
           <div className="flex flex-wrap items-center gap-3 shrink-0">
+            <Link
+              href={`/dashboard/repositories/${repoId}/health`}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#181818] hover:bg-[#222222] border border-[#2E2E2E] hover:border-neutral-500 text-white font-semibold text-xs transition-all cursor-pointer"
+            >
+              <Activity className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Health Scorecard</span>
+            </Link>
+
             <Link
               href={`/dashboard/repositories/${repoId}/analysis`}
               className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#181818] hover:bg-[#222222] border border-[#2E2E2E] hover:border-neutral-500 text-white font-semibold text-xs transition-all cursor-pointer"

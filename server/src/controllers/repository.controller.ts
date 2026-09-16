@@ -4,6 +4,8 @@ import { sendSuccess } from "../lib/response";
 import repositoryService from "../services/repository.service";
 import codeFetchService from "../services/code-fetch.service";
 import codeAnalysisService from "../services/code-analysis.service";
+import healthScoreService from "../services/health-score.service";
+import analyticsService from "../services/analytics.service";
 
 /**
  * POST /api/repositories/sync - Trigger GitHub repository list synchronization
@@ -238,4 +240,82 @@ export const getRepositoryFileAnalysisResultsHandler = asyncHandler(
     sendSuccess(res, issues, 200);
   }
 );
+
+/**
+ * POST /api/repositories/:id/calculate-health - Trigger health scores & grade calculation
+ */
+export const calculateRepositoryHealthHandler = asyncHandler(
+  async (req: Request, res: Response) => {
+    const id = (Array.isArray(req.params.id) ? req.params.id[0] : req.params.id) as string;
+    const health = await healthScoreService.calculateHealthScores(id, req.user!.id);
+    sendSuccess(res, health, 200);
+  }
+);
+
+/**
+ * GET /api/repositories/:id/health - Retrieve latest health score record
+ */
+export const getRepositoryHealthHandler = asyncHandler(
+  async (req: Request, res: Response) => {
+    const id = (Array.isArray(req.params.id) ? req.params.id[0] : req.params.id) as string;
+    const health = await healthScoreService.getLatestHealth(id, req.user!.id);
+    sendSuccess(res, health, 200);
+  }
+);
+
+/**
+ * GET /api/repositories/:id/health/history - Retrieve historical health scores
+ */
+export const getRepositoryHealthHistoryHandler = asyncHandler(
+  async (req: Request, res: Response) => {
+    const id = (Array.isArray(req.params.id) ? req.params.id[0] : req.params.id) as string;
+    const history = await healthScoreService.getHealthHistory(id, req.user!.id);
+    sendSuccess(res, history, 200);
+  }
+);
+
+/**
+ * GET /api/repositories/health-overview - Retrieve latest health scores for all selected repositories
+ */
+export const getUserRepositoriesHealthOverviewHandler = asyncHandler(
+  async (req: Request, res: Response) => {
+    const overview = await healthScoreService.getUserRepositoriesHealthOverview(req.user!.id);
+    sendSuccess(res, overview, 200);
+  }
+);
+
+/**
+ * GET /api/repositories/:id/analytics/severity-distribution - Retrieve severity distribution for pie chart
+ */
+export const getSeverityDistributionAnalyticsHandler = asyncHandler(
+  async (req: Request, res: Response) => {
+    const id = (Array.isArray(req.params.id) ? req.params.id[0] : req.params.id) as string;
+    const distribution = await analyticsService.getIssueDistributionBySeverity(id, req.user!.id);
+    sendSuccess(res, distribution, 200);
+  }
+);
+
+/**
+ * GET /api/repositories/:id/analytics/type-distribution - Retrieve issue type distribution for bar chart
+ */
+export const getTypeDistributionAnalyticsHandler = asyncHandler(
+  async (req: Request, res: Response) => {
+    const id = (Array.isArray(req.params.id) ? req.params.id[0] : req.params.id) as string;
+    const distribution = await analyticsService.getIssueDistributionByType(id, req.user!.id);
+    sendSuccess(res, distribution, 200);
+  }
+);
+
+/**
+ * GET /api/repositories/:id/analytics/top-files - Retrieve top problematic files
+ */
+export const getTopFilesAnalyticsHandler = asyncHandler(
+  async (req: Request, res: Response) => {
+    const id = (Array.isArray(req.params.id) ? req.params.id[0] : req.params.id) as string;
+    const limit = req.query.limit ? parseInt(String(req.query.limit), 10) : 10;
+    const topFiles = await analyticsService.getTopProblematicFiles(id, req.user!.id, limit);
+    sendSuccess(res, topFiles, 200);
+  }
+);
+
 

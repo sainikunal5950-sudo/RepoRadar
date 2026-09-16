@@ -43,6 +43,7 @@ model Repository {
   fileTree             RepositoryFileTree?
   codeIssues           CodeIssue[]
   analysisSummary      AnalysisSummary?
+  healthRecords        RepositoryHealth[]
   createdAt            DateTime             @default(now())
   updatedAt            DateTime             @updatedAt
 
@@ -176,3 +177,25 @@ model Project {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
+
+model RepositoryHealth {
+  id                    String     @id @default(auto()) @map("_id") @db.ObjectId
+  repository_id         String     @db.ObjectId
+  overall_score         Float
+  overall_grade         String     // "A", "B", "C", "D", "F"
+  code_quality_score    Float
+  security_score        Float
+  maintainability_score Float
+  performance_score     Float
+  total_files_analyzed  Int
+  total_lines_of_code   Int?
+  calculated_at         DateTime   @default(now())
+  createdAt             DateTime   @default(now())
+  updatedAt             DateTime   @updatedAt
+
+  repository            Repository @relation(fields: [repository_id], references: [id], onDelete: Cascade)
+
+  @@index([repository_id])
+  @@index([repository_id, calculated_at])
+}
+

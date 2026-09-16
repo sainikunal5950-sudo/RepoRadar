@@ -1,6 +1,7 @@
 import prisma from "../lib/db";
 import AppError from "../lib/AppError";
 import { scanFileForIssues, RuleIssue, IssueType, Severity } from "./analysis-rules";
+import healthScoreService from "./health-score.service";
 
 const SUPPORTED_CODE_EXTENSIONS = new Set([
   "ts", "tsx", "js", "jsx", "mjs", "cjs",
@@ -176,6 +177,13 @@ export class CodeAnalysisService {
         analysis_completed_at: new Date(),
       },
     });
+
+    // 8. Automatically trigger health score calculation so metrics stay synchronized
+    try {
+      await healthScoreService.calculateHealthScores(repositoryId);
+    } catch (err) {
+      console.error("Failed to auto-calculate health scores after analysis:", err);
+    }
 
     return {
       summary,
