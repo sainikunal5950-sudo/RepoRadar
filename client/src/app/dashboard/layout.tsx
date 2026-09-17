@@ -13,6 +13,8 @@ import {
   CheckCircle2,
   ArrowUpRight,
 } from "lucide-react";
+import AIUsageIndicator from "@/components/ui/AIUsageIndicator";
+
 
 export default function DashboardLayout({
   children,
@@ -83,6 +85,8 @@ export default function DashboardLayout({
 
           {/* Right User Bar */}
           <div className="flex items-center gap-3">
+            <AIUsageIndicator />
+
             {hasGithub ? (
               <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-white/5 border border-white/10 text-xs font-mono text-neutral-300">
                 <Github className="w-3.5 h-3.5 text-white" />
@@ -94,6 +98,7 @@ export default function DashboardLayout({
                 <span>JWT Active</span>
               </div>
             )}
+
 
             <button
               type="button"

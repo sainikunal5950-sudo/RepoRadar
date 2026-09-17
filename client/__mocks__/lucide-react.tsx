@@ -66,6 +66,16 @@ export const CalendarDays = createIcon("CalendarDays");
 export const GitMerge = createIcon("GitMerge");
 export const Hourglass = createIcon("Hourglass");
 export const ArrowUpDown = createIcon("ArrowUpDown");
+export const Bot = createIcon("Bot");
+export const Wand2 = createIcon("Wand2");
+export const Cpu = createIcon("Cpu");
+export const Coins = createIcon("Coins");
+export const MessageSquareCode = createIcon("MessageSquareCode");
+export const CheckCheck = createIcon("CheckCheck");
+export const X = createIcon("X");
+export const HelpCircle = createIcon("HelpCircle");
+export const AlertOctagon = createIcon("AlertOctagon");
+
 
 
 

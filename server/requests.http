@@ -234,8 +234,61 @@ Accept: application/json
 
 
 ### ====================================================================
-### Protected Project Resource Endpoints (Requires Authorization Header)
+### AI/LLM Microservice Endpoints (Module 10 - Protected & Hourly Rate-Limited)
 ### ====================================================================
+
+### 36. Explain Code Snippet
+# @name explainCodeSnippet
+POST {{baseUrl}}/api/ai/explain-code
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "code": "export const verifyToken = (token: string) => jwt.verify(token, process.env.JWT_SECRET!);",
+  "language": "typescript",
+  "file_path": "src/lib/jwt.ts",
+  "context": "Express backend auth helper"
+}
+
+### 37. Explain Whole File Architecture
+# @name explainWholeFile
+POST {{baseUrl}}/api/ai/explain-file
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "file_path": "server/src/services/code-analysis.service.ts",
+  "language": "typescript"
+}
+
+### 38. Suggest AI Fix for Static Analysis Issue
+# @name suggestAIFix
+POST {{baseUrl}}/api/ai/suggest-fix
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "issue_id": "65d75cf9e1d84f23b890abcf",
+  "file_path": "server/src/database.ts",
+  "line_number": 15,
+  "issue_type": "security",
+  "severity": "critical",
+  "message": "Hardcoded AWS Access Key detected in source code",
+  "code_snippet": "const awsKey = 'AKIA1234567890ABCDEF';",
+  "rule_id": "security/hardcoded-aws-key"
+}
+
+### 39. Get AI Usage & Hourly Quota Status
+GET {{baseUrl}}/api/ai/usage
+Authorization: Bearer {{authToken}}
+Accept: application/json
+
+### 40. Microservice Health Check (Proxied)
+GET {{baseUrl}}/api/ai/health
+Authorization: Bearer {{authToken}}
+Accept: application/json
+
+
 
 ### 19. Create Project - Success (Protected)
 # @name createProject

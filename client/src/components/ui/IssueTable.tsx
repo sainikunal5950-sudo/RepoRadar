@@ -29,8 +29,11 @@ export interface CodeIssueItem {
   suggested_fix?: string | null;
   code_snippet?: string | null;
   rule_id?: string | null;
+  ai_suggested_fix?: string | null;
   createdAt?: string;
 }
+
+import AIFixSuggestion from "./AIFixSuggestion";
 
 interface Props {
   issues: CodeIssueItem[];
@@ -171,11 +174,24 @@ export default function IssueTable({ issues, isLoading }: Props) {
                           </div>
                         )}
 
+                        {/* AI Fix Suggestion Section */}
+                        <AIFixSuggestion
+                          issueId={issue.id}
+                          filePath={issue.file_path}
+                          lineNumber={issue.line_number}
+                          issueType={issue.issue_type}
+                          severity={issue.severity}
+                          message={issue.message}
+                          codeSnippet={issue.code_snippet}
+                          ruleId={issue.rule_id}
+                          cachedFix={issue.ai_suggested_fix}
+                        />
+
                         {/* Code Snippet */}
                         {issue.code_snippet && (
                           <div className="space-y-1.5">
                             <div className="flex items-center justify-between text-[11px] text-neutral-400">
-                              <span>Code Snippet (Line {issue.line_number}):</span>
+                              <span>Original Code Snippet (Line {issue.line_number}):</span>
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
@@ -213,3 +229,4 @@ export default function IssueTable({ issues, isLoading }: Props) {
     </div>
   );
 }
+

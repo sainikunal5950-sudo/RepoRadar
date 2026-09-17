@@ -8,56 +8,55 @@ RepoRadar is a modern developer-first platform designed to continuously scan, mo
 
 ## 🏗️ Architecture & Project Structure
 
-RepoRadar is structured as a clean full-stack project with two decoupled applications:
+RepoRadar is structured as a decoupled three-tier microservices architecture:
 
 ```
 reporadar/
-├── client/                          # FRONTEND (Next.js 14+ App Router)
+├── client/                          # FRONTEND (Next.js 14+ App Router - Port 3000)
 │   ├── src/
 │   │   ├── app/
 │   │   │   ├── (auth)/              # Authentication pages (Module 2)
-│   │   │   ├── dashboard/           # Main application dashboard (Module 2+)
+│   │   │   ├── dashboard/           # Main application dashboard (Module 2-10)
 │   │   │   ├── globals.css          # Dark design system & Tailwind tokens
 │   │   │   ├── layout.tsx           # Root Next.js layout & metadata
 │   │   │   └── page.tsx             # Dark SaaS landing page & hero radar
 │   │   ├── components/
-│   │   │   └── ui/                  # Reusable UI component library
+│   │   │   └── ui/                  # Reusable UI component library (AI Remediation, Charts, Tree)
 │   │   ├── lib/                     # Frontend utilities & API helpers
 │   │   ├── types/                   # Frontend TypeScript types
 │   │   └── config/                  # Site & navigation configurations
-│   ├── public/                      # Static assets
-│   ├── .env.example                 # Frontend environment variables template
-│   ├── .env.local                   # Local frontend environment variables
-│   ├── .eslintrc.json               # ESLint configuration
-│   ├── .prettierrc                  # Prettier code formatting rules
-│   ├── tailwind.config.ts           # Custom monochrome dark theme tokens
-│   ├── tsconfig.json                # TypeScript configuration
-│   ├── next.config.mjs              # Next.js configuration
-│   └── package.json
+│   ├── package.json
 │
-├── server/                          # BACKEND (Node.js + Express + TypeScript)
+├── server/                          # BACKEND GATEWAY (Node.js + Express + TypeScript - Port 5000)
 │   ├── src/
-│   │   ├── routes/                  # API route definitions (Module 1+)
-│   │   ├── controllers/             # Request handlers & controllers (Module 1+)
-│   │   ├── services/                # Business logic & AI scanning (Module 1+)
-│   │   ├── middleware/              # Auth, validation & error handling
-│   │   ├── lib/
-│   │   │   └── db.ts                # Prisma singleton instance
-│   │   ├── types/                   # Backend TypeScript types
-│   │   ├── config/                  # Typed environment configuration
-│   │   └── index.ts                 # Express entrypoint & /api/health
+│   │   ├── routes/                  # API routes (Auth, Repos, Analysis, Health, AI Gateway)
+│   │   ├── controllers/             # Request handlers & controllers
+│   │   ├── services/                # Business logic, GitHub Octokit, AI Service Client
+│   │   ├── middleware/              # Auth, validation, AI rate limiting & error handling
+│   │   ├── lib/                     # Prisma singleton instance & encryption
+│   │   └── index.ts                 # Express entrypoint
 │   ├── prisma/
 │   │   └── schema.prisma            # Prisma schema (MongoDB provider)
-│   ├── .env.example                 # Server environment variables template
-│   ├── .env                         # Local server environment variables
-│   ├── .eslintrc.json               # ESLint configuration
-│   ├── .prettierrc                  # Prettier code formatting rules
-│   ├── tsconfig.json                # TypeScript configuration
 │   └── package.json
+│
+├── ai-service/                      # AI / LLM MICROSERVICE (FastAPI + Python 3.10 - Port 8000)
+│   ├── app/
+│   │   ├── main.py                  # FastAPI entrypoint & X-API-Key middleware
+│   │   ├── config.py                # Pydantic Settings & environment configuration
+│   │   ├── models/schemas.py        # Pydantic request/response schemas
+│   │   ├── routers/                 # Explain, Suggest, and Health routers
+│   │   ├── services/                # LLM client (OpenAI/Anthropic) & remediation logic
+│   │   ├── prompts/templates.py     # Prompt templates with strict JSON schemas
+│   │   └── utils/chunking.py        # Intelligent code & markdown chunker
+│   ├── tests/                       # Pytest test suite
+│   ├── requirements.txt             # Python dependencies
+│   ├── Dockerfile                   # Production container definition
+│   └── README.md
 │
 ├── .gitignore                       # Root git ignore
 └── README.md                        # Documentation & setup guide
 ```
+
 
 ---
 
@@ -156,6 +155,49 @@ Follow these steps to get RepoRadar running locally on your machine.
    npm run dev
    ```
    The frontend application will run on **http://localhost:3000**.
+
+---
+
+### 3. AI / LLM Microservice Setup (`ai-service/`)
+
+1. Open a terminal and navigate to the `ai-service/` directory:
+   ```bash
+   cd ai-service
+   ```
+
+2. Create and activate a Python virtual environment:
+   ```bash
+   python -m venv venv
+   # On Windows:
+   .\venv\Scripts\activate
+   # On Linux/macOS:
+   source venv/bin/activate
+   ```
+
+3. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+4. Set up environment variables:
+   ```bash
+   cp .env.example .env
+   ```
+   Configure your OpenAI or Anthropic API key:
+   ```env
+   OPENAI_API_KEY="sk-..."
+   AI_SERVICE_API_KEY="reporadar-ai-service-secret-key-change-in-production"
+   LLM_PROVIDER="openai"
+   LLM_MODEL="gpt-4o-mini"
+   ```
+
+5. Start the FastAPI development server:
+   ```bash
+   uvicorn app.main:app --reload --port 8000
+   ```
+   The AI microservice will run on **http://localhost:8000**.
+   - Interactive Swagger API Docs: **http://localhost:8000/docs**
+   - Health check: `GET http://localhost:8000/health`
 
 ---
 

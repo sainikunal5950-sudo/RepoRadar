@@ -15,7 +15,8 @@ import "prismjs/components/prism-markdown";
 import "prismjs/components/prism-css";
 import "prismjs/components/prism-yaml";
 import "prismjs/components/prism-sql";
-import { Copy, Check, FileCode, AlertCircle, Loader2 } from "lucide-react";
+import { Copy, Check, FileCode, AlertCircle, Loader2, Sparkles } from "lucide-react";
+import AIExplanationPanel from "./AIExplanationPanel";
 
 interface Props {
   filePath: string | null;
@@ -43,6 +44,7 @@ export function FileViewer({
   isBinary,
 }: Props) {
   const [copied, setCopied] = useState(false);
+  const [isExplainOpen, setIsExplainOpen] = useState(false);
 
   useEffect(() => {
     if (content) {
@@ -119,6 +121,17 @@ export function FileViewer({
 
           <button
             type="button"
+            onClick={() => setIsExplainOpen(true)}
+            disabled={!content}
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-purple-950/40 hover:bg-purple-900/60 border border-purple-500/30 text-purple-300 hover:text-purple-200 transition-colors cursor-pointer"
+            title="Explain code with AI microservice"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-purple-400" />
+            <span className="text-[11px] font-semibold">Explain Code</span>
+          </button>
+
+          <button
+            type="button"
             onClick={handleCopy}
             disabled={!content}
             className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#1C1C1C] hover:bg-[#262626] border border-[#2E2E2E] text-neutral-300 hover:text-white transition-colors cursor-pointer"
@@ -158,8 +171,18 @@ export function FileViewer({
           </pre>
         </div>
       </div>
+
+      {/* AI Code Explanation Modal */}
+      <AIExplanationPanel
+        isOpen={isExplainOpen}
+        onClose={() => setIsExplainOpen(false)}
+        filePath={filePath}
+        codeSnippet={content}
+        language={language}
+      />
     </div>
   );
 }
 
 export default FileViewer;
+
