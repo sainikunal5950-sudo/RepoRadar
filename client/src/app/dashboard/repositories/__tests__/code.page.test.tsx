@@ -6,7 +6,9 @@ import { useParams } from "next/navigation";
 
 jest.mock("next/navigation", () => ({
   useParams: jest.fn(),
+  useSearchParams: jest.fn(() => ({ get: jest.fn() })),
 }));
+
 
 jest.mock("@/lib/api-client");
 

@@ -28,6 +28,9 @@ import {
   getRepositoryHeatmapHandler,
   getRepositoryHotspotsHandler,
   getRepositoryTechnicalDebtHandler,
+  indexRepositoryCodeHandler,
+  getRepositoryIndexStatusHandler,
+  searchRepositoryCodeHandler,
 } from "../controllers/repository.controller";
 
 import authMiddleware from "../middleware/authMiddleware";
@@ -36,7 +39,9 @@ import {
   repositoryIdParamSchema,
   analysisQuerySchema,
   analysisFileParamsSchema,
+  searchCodeSchema,
 } from "../schemas/repository.schema";
+
 
 const router = Router();
 
@@ -127,7 +132,17 @@ router.get("/:id/analytics/hotspots", validate(repositoryIdParamSchema), getRepo
 // GET /api/repositories/:id/analytics/technical-debt - Retrieve highest-risk technical debt files
 router.get("/:id/analytics/technical-debt", validate(repositoryIdParamSchema), getRepositoryTechnicalDebtHandler);
 
+// POST /api/repositories/:id/index-code - Trigger semantic embedding indexing of code files
+router.post("/:id/index-code", validate(repositoryIdParamSchema), indexRepositoryCodeHandler);
+
+// GET /api/repositories/:id/index-status - Retrieve current embedding indexing status & chunk count
+router.get("/:id/index-status", validate(repositoryIdParamSchema), getRepositoryIndexStatusHandler);
+
+// POST /api/repositories/:id/search-code - Semantic vector search across repository code chunks
+router.post("/:id/search-code", validate(searchCodeSchema), searchRepositoryCodeHandler);
+
 export default router;
+
 
 
 

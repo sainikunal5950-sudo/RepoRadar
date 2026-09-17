@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app.config import settings
-from app.routers import health, explain, suggest
+from app.routers import health, explain, suggest, embeddings
 
 # Logging setup
 logging.basicConfig(
@@ -34,7 +34,7 @@ async def verify_api_key(api_key: str = Security(api_key_header)):
 
 app = FastAPI(
     title="RepoRadar AI Service",
-    description="Dedicated microservice for LLM-powered code explanation, summarization, and issue remediation.",
+    description="Dedicated microservice for LLM-powered code explanation, summarization, issue remediation, and vector embeddings.",
     version="1.0.0",
 )
 
@@ -89,6 +89,11 @@ app.include_router(
     suggest.router,
     dependencies=[Depends(verify_api_key)],
 )
+app.include_router(
+    embeddings.router,
+    dependencies=[Depends(verify_api_key)],
+)
+
 
 
 @app.get("/")

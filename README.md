@@ -418,9 +418,64 @@ RepoRadar converts raw static issues into explainable, normalized health metrics
 
 ---
 
+---
+
+### 🧠 Module 11: Code Embeddings & MongoDB Atlas Vector Search
+
+Module 11 provides semantic code vectorization and vector similarity search across repository source code — laying the retrieval foundation for RAG (Retrieval-Augmented Generation) repository chat.
+
+#### Architecture & Pipeline
+1. **Semantic Code Chunking (`ai-service/app/utils/code_chunker.py`)**:
+   - Language-aware AST/regex boundary detection (Python, TypeScript/JavaScript, Go, Java, Rust, C/C++, etc.).
+   - Splits code files into semantic function/class/block segments with target chunk sizes of ~200-500 tokens (~800-2000 chars) and **~20% overlap** between adjacent chunks.
+   - Tracks exact 1-indexed `start_line` and `end_line` ranges and semantic labels.
+2. **Batch Embedding Generation (`ai-service/app/services/embedding_service.py`)**:
+   - Computes high-dimensional vector embeddings via OpenAI (`text-embedding-3-small`, 1536 dimensions) or local open-source models via `sentence-transformers` (`all-MiniLM-L6-v2`, 384 dimensions).
+   - Singleton model loading at startup for high throughput.
+3. **MongoDB Atlas Vector Search (`server/src/services/vector-search.service.ts`)**:
+   - Stores chunk embeddings with metadata directly in MongoDB `code_embeddings` collection via the native MongoDB Node.js driver (`mongodb`).
+   - Executes Atlas `$vectorSearch` aggregation pipeline scoped per repository.
+   - **Automatic Graceful In-Memory Fallback:** When running against a local MongoDB instance or Atlas cluster without search index provisioned, the service automatically calculates in-memory cosine similarity over the repository's embeddings so development and testing environments run seamlessly.
+4. **Interactive UI (`client/src/app/dashboard/repositories/[id]/search/page.tsx`)**:
+   - One-click repository indexing with real-time progress polling.
+   - Natural language search query input with quick-prompt chips.
+   - Dynamic `CodeSearchResult` cards displaying syntax-highlighted snippets, line numbers, chunk type badges, and relevance percentage match indicators with direct jump-to-file links.
+
+#### MongoDB Atlas Vector Search Setup
+To configure the Atlas Vector Search index on MongoDB Atlas:
+1. Navigate to **MongoDB Atlas Dashboard** -> **Atlas Search** tab -> **Create Search Index**.
+2. Select **Atlas Vector Search** (JSON Editor).
+3. Choose the target database and collection: `code_embeddings`.
+4. Set Index Name to: `vector_index`.
+5. Paste the following index definition:
+```json
+{
+  "fields": [
+    {
+      "type": "vector",
+      "path": "embedding",
+      "numDimensions": 1536,
+      "similarity": "cosine"
+    },
+    {
+      "type": "filter",
+      "path": "repository_id"
+    }
+  ]
+}
+```
+6. Click **Next** and **Create Search Index**. Alternatively, run `npx tsx scripts/create-vector-index.ts` from the `server` folder.
+
+#### API Endpoints
+- `POST /api/repositories/:id/index-code` - Trigger background code chunking and vector embedding generation.
+- `GET /api/repositories/:id/index-status` - Check indexing progress (`not_started` | `processing` | `completed` | `failed`) and chunk count.
+- `POST /api/repositories/:id/search-code` - Execute semantic vector search across repository code chunks (`{ query: string, limit?: number }`).
+
+---
+
 ### 🧪 Testing the API
 
-A complete REST test suite is included in [`server/requests.http`](file:///c:/Users/ASUS/OneDrive/Desktop/BEE/server/requests.http). You can execute authentication, GitHub OAuth user sync, repository syncing, detailed telemetry ingestion, source code indexing, static code analysis, health score calculation, selection toggling, and error edge cases using the VS Code **REST Client** extension, Postman, or `curl`.
+A complete REST test suite is included in [`server/requests.http`](file:///c:/Users/ASUS/OneDrive/Desktop/BEE/server/requests.http). You can execute authentication, GitHub OAuth user sync, repository syncing, detailed telemetry ingestion, source code indexing, static code analysis, health score calculation, selection toggling, code vector search, and error edge cases using the VS Code **REST Client** extension, Postman, or `curl`.
 
 ---
 
@@ -447,10 +502,12 @@ The frontend implements a dark monochrome aesthetic inspired by Vercel, Linear, 
 - [x] **Module 7:** Static Rule-Based Code Analysis Engine & Dashboard (`/dashboard/repositories/:id/analysis`, Security/Bug/Performance/Code-Smell scanning, filterable Issue Table, Analysis Summary).
 - [x] **Module 8:** Health Radar Scorecard, Analytics Engine & Interactive Visualizer (`/dashboard/repositories/:id/health`, Recharts visualizations, Grade badges, Worst-First multi-repo overview).
 - [x] **Module 9:** Developer Analytics, Activity Heatmap & Technical Debt Hotspot Engine (`/dashboard/repositories/:id/analytics`, Contributor Leaderboard, Recharts Timeline, 7x24 Punch Card Heatmap, Hotspot Churn & Debt Score).
-- [ ] **Module 10:** Automated Remediation Suggestions & AI Synthesis.
-
+- [x] **Module 10:** Dedicated AI Microservice & Intelligent Code Explanation / Automated Issue Remediation (`ai-service` on FastAPI, `/api/explain/code`, `/api/explain/file`, `/api/suggest/fix`, token tracking).
+- [x] **Module 11:** Code Vector Embeddings & MongoDB Atlas Vector Search (`code_embeddings` native collection, semantic code chunking with ~20% overlap, Atlas `$vectorSearch`, in-memory cosine similarity fallback, `/dashboard/repositories/:id/search` interactive UI).
+- [ ] **Module 12:** Conversational RAG Repository Chat & Context-Aware Assistant.
 
 ---
 
 ## 📄 License
 MIT License.
+

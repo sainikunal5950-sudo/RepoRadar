@@ -73,8 +73,12 @@ export const Coins = createIcon("Coins");
 export const MessageSquareCode = createIcon("MessageSquareCode");
 export const CheckCheck = createIcon("CheckCheck");
 export const X = createIcon("X");
-export const HelpCircle = createIcon("HelpCircle");
 export const AlertOctagon = createIcon("AlertOctagon");
+export const Tag = createIcon("Tag");
+export const Database = createIcon("Database");
+export const Compass = createIcon("Compass");
+export const Hash = createIcon("Hash");
+
 
 
 

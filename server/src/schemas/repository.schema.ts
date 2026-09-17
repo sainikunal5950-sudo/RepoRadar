@@ -47,5 +47,19 @@ export const analysisFileParamsSchema = z.object({
   }),
 });
 
+export const searchCodeSchema = z.object({
+  params: z.object({
+    id: z
+      .string({ message: "Repository ID is required" })
+      .regex(/^[0-9a-fA-F]{24}$/, "Invalid Repository ID format (must be 24-character hex MongoDB ObjectId)"),
+  }),
+  body: z.object({
+    query: z.string({ message: "Search query is required" }).min(1, "Query cannot be empty").max(1000),
+    limit: z.number().int().min(1).max(50).optional().default(10),
+  }),
+});
+
 export type RepositoryIdParam = z.infer<typeof repositoryIdParamSchema>["params"];
+export type SearchCodeBody = z.infer<typeof searchCodeSchema>["body"];
+
 

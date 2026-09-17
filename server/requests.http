@@ -288,6 +288,31 @@ GET {{baseUrl}}/api/ai/health
 Authorization: Bearer {{authToken}}
 Accept: application/json
 
+### ====================================================================
+### MODULE 11: CODE VECTOR EMBEDDINGS & ATLAS VECTOR SEARCH
+### ====================================================================
+
+### 41. Trigger Codebase Vector Indexing (Async)
+POST {{baseUrl}}/api/repositories/{{repositoryId}}/index-code
+Authorization: Bearer {{authToken}}
+Accept: application/json
+
+### 42. Get Vector Indexing Status & Total Chunks Count
+GET {{baseUrl}}/api/repositories/{{repositoryId}}/index-status
+Authorization: Bearer {{authToken}}
+Accept: application/json
+
+### 43. Semantic Vector Search Across Repository Code
+POST {{baseUrl}}/api/repositories/{{repositoryId}}/search-code
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "query": "JWT token verification and authentication middleware",
+  "limit": 5
+}
+
+
 
 
 ### 19. Create Project - Success (Protected)

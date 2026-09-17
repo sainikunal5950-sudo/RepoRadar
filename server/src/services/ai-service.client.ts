@@ -68,6 +68,42 @@ export interface AIHealthResponse {
   service: string;
 }
 
+export interface AIGenerateEmbeddingResponse {
+  embedding: number[];
+  dimensions: number;
+  model: string;
+}
+
+export interface AIGenerateEmbeddingsBatchResponse {
+  embeddings: number[][];
+  count: number;
+  dimensions: number;
+  model: string;
+}
+
+export interface AIChunkAndEmbedRequest {
+  content: string;
+  filePath: string;
+  language?: string;
+}
+
+export interface AICodeChunkWithEmbedding {
+  chunk_text: string;
+  start_line: number;
+  end_line: number;
+  chunk_type: string;
+  chunk_label: string;
+  embedding: number[];
+}
+
+export interface AIChunkAndEmbedResponse {
+  file_path: string;
+  language?: string;
+  total_chunks: number;
+  dimensions: number;
+  chunks: AICodeChunkWithEmbedding[];
+}
+
 export class AIServiceClient {
   private baseUrl: string;
   private apiKey: string;
@@ -222,7 +258,52 @@ export class AIServiceClient {
       }),
     });
   }
+
+  /**
+   * Generates a single vector embedding for a query or text string
+   */
+  async generateEmbedding(text: string): Promise<AIGenerateEmbeddingResponse> {
+    return this.request<AIGenerateEmbeddingResponse>("/api/embeddings/generate", {
+      method: "POST",
+      body: JSON.stringify({ text }),
+    });
+  }
+
+  /**
+   * Generates batch vector embeddings for multiple text strings
+   */
+  async generateEmbeddingsBatch(
+    texts: string[]
+  ): Promise<AIGenerateEmbeddingsBatchResponse> {
+    return this.request<AIGenerateEmbeddingsBatchResponse>(
+      "/api/embeddings/generate-batch",
+      {
+        method: "POST",
+        body: JSON.stringify({ texts }),
+      }
+    );
+  }
+
+  /**
+   * Chunks a file and generates embeddings for all chunks in a single AI service call
+   */
+  async chunkAndEmbed(
+    req: AIChunkAndEmbedRequest
+  ): Promise<AIChunkAndEmbedResponse> {
+    return this.request<AIChunkAndEmbedResponse>(
+      "/api/embeddings/chunk-and-embed",
+      {
+        method: "POST",
+        body: JSON.stringify({
+          content: req.content,
+          file_path: req.filePath,
+          language: req.language,
+        }),
+      }
+    );
+  }
 }
 
 export const aiServiceClient = new AIServiceClient();
 export default aiServiceClient;
+

@@ -49,6 +49,8 @@ model Repository {
   codeIssues           CodeIssue[]
   analysisSummary      AnalysisSummary?
   healthRecords        RepositoryHealth[]
+  indexing_status      String               @default("not_started")
+  total_chunks_indexed Int                  @default(0)
   createdAt            DateTime             @default(now())
   updatedAt            DateTime             @updatedAt
 

@@ -7,6 +7,9 @@ import codeAnalysisService from "../services/code-analysis.service";
 import healthScoreService from "../services/health-score.service";
 import analyticsService from "../services/analytics.service";
 import developerAnalyticsService from "../services/developer-analytics.service";
+import embeddingIndexingService from "../services/embedding-indexing.service";
+import vectorSearchService from "../services/vector-search.service";
+
 
 /**
  * POST /api/repositories/sync - Trigger GitHub repository list synchronization
@@ -411,6 +414,46 @@ export const getRepositoryTechnicalDebtHandler = asyncHandler(
     sendSuccess(res, debtSummary, 200);
   }
 );
+
+/**
+ * POST /api/repositories/:id/index-code - Trigger semantic embedding indexing of repository code files
+ */
+export const indexRepositoryCodeHandler = asyncHandler(
+  async (req: Request, res: Response) => {
+    const id = (Array.isArray(req.params.id) ? req.params.id[0] : req.params.id) as string;
+    const result = await embeddingIndexingService.triggerRepositoryIndexing(id, req.user!.id);
+    sendSuccess(res, result, 202);
+  }
+);
+
+/**
+ * GET /api/repositories/:id/index-status - Retrieve repository code indexing status & chunk count
+ */
+export const getRepositoryIndexStatusHandler = asyncHandler(
+  async (req: Request, res: Response) => {
+    const id = (Array.isArray(req.params.id) ? req.params.id[0] : req.params.id) as string;
+    const statusResult = await embeddingIndexingService.getIndexingStatus(id, req.user!.id);
+    sendSuccess(res, statusResult, 200);
+  }
+);
+
+/**
+ * POST /api/repositories/:id/search-code - Execute semantic vector search across repository code
+ */
+export const searchRepositoryCodeHandler = asyncHandler(
+  async (req: Request, res: Response) => {
+    const id = (Array.isArray(req.params.id) ? req.params.id[0] : req.params.id) as string;
+    const { query, limit } = req.body;
+    const searchResults = await vectorSearchService.searchCode(
+      id,
+      req.user!.id,
+      query,
+      limit ? parseInt(String(limit), 10) : 10
+    );
+    sendSuccess(res, searchResults, 200);
+  }
+);
+
 
 
 

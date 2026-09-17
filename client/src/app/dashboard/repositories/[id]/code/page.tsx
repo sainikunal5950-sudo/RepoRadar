@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import {
   ArrowLeft,
   FolderGit2,
@@ -17,6 +17,8 @@ import {
   Layers,
   ShieldCheck,
   Activity,
+  Search,
+  Sparkles,
 } from "lucide-react";
 
 import apiClient from "@/lib/api-client";
@@ -46,9 +48,24 @@ interface FileContentResponse {
   is_binary: boolean;
 }
 
+function findNodeByPath(nodes: TreeNode[], targetPath: string): TreeNode | null {
+  for (const node of nodes) {
+    if (node.path === targetPath) {
+      return node;
+    }
+    if (node.children && node.children.length > 0) {
+      const found = findNodeByPath(node.children, targetPath);
+      if (found) return found;
+    }
+  }
+  return null;
+}
+
 export default function RepositoryCodeExplorerPage() {
   const params = useParams();
+  const searchParams = useSearchParams();
   const repoId = params?.id as string;
+  const targetFileParam = searchParams?.get("file");
 
   const [repoInfo, setRepoInfo] = useState<RepositorySummary | null>(null);
   const [tree, setTree] = useState<TreeNode[]>([]);
@@ -72,6 +89,37 @@ export default function RepositoryCodeExplorerPage() {
   const [selectedFileSize, setSelectedFileSize] = useState<number | undefined>(undefined);
   const [selectedFileIsBinary, setSelectedFileIsBinary] = useState<boolean>(false);
 
+  // Load File Content when a tree item is clicked
+  const handleSelectFile = useCallback(async (node: TreeNode) => {
+    if (node.type !== "file") return;
+
+    setSelectedPath(node.path);
+    setSelectedFileLang(node.language || "plaintext");
+    setSelectedFileSize(node.size);
+    setSelectedFileIsBinary(false);
+
+    if (!node.file_id) {
+      setSelectedFileContent(null);
+      return;
+    }
+
+    setIsLoadingFile(true);
+    const res = await apiClient<FileContentResponse>(
+      `/api/repositories/${repoId}/files/${node.file_id}`
+    );
+
+    if (res.success && res.data) {
+      setSelectedFileContent(res.data.content);
+      setSelectedFileLang(res.data.language);
+      setSelectedFileSize(res.data.file_size);
+      setSelectedFileIsBinary(res.data.is_binary);
+    } else {
+      setSelectedFileContent("// Failed to load file content from database");
+    }
+
+    setIsLoadingFile(false);
+  }, [repoId]);
+
   // Load Tree on Mount
   const loadFileTree = useCallback(async () => {
     if (!repoId) return;
@@ -93,14 +141,24 @@ export default function RepositoryCodeExplorerPage() {
       `/api/repositories/${repoId}/files/tree`
     );
     if (treeRes.success && treeRes.data) {
-      setTree(treeRes.data.tree || []);
+      const treeData = treeRes.data.tree || [];
+      setTree(treeData);
       setTotalFiles(treeRes.data.total_files);
       setTotalDirs(treeRes.data.total_dirs);
       setLastIndexedAt(treeRes.data.updated_at);
+
+      // If file query param exists, auto-open that file
+      if (targetFileParam) {
+        const targetNode = findNodeByPath(treeData, targetFileParam);
+        if (targetNode) {
+          handleSelectFile(targetNode);
+        }
+      }
     }
 
     setIsLoadingTree(false);
-  }, [repoId]);
+  }, [repoId, targetFileParam, handleSelectFile]);
+
 
   useEffect(() => {
     loadFileTree();
@@ -138,37 +196,6 @@ export default function RepositoryCodeExplorerPage() {
     }
 
     setIsFetchingCode(false);
-  };
-
-  // Load File Content when a tree item is clicked
-  const handleSelectFile = async (node: TreeNode) => {
-    if (node.type !== "file") return;
-
-    setSelectedPath(node.path);
-    setSelectedFileLang(node.language || "plaintext");
-    setSelectedFileSize(node.size);
-    setSelectedFileIsBinary(false);
-
-    if (!node.file_id) {
-      setSelectedFileContent(null);
-      return;
-    }
-
-    setIsLoadingFile(true);
-    const res = await apiClient<FileContentResponse>(
-      `/api/repositories/${repoId}/files/${node.file_id}`
-    );
-
-    if (res.success && res.data) {
-      setSelectedFileContent(res.data.content);
-      setSelectedFileLang(res.data.language);
-      setSelectedFileSize(res.data.file_size);
-      setSelectedFileIsBinary(res.data.is_binary);
-    } else {
-      setSelectedFileContent("// Failed to load file content from database");
-    }
-
-    setIsLoadingFile(false);
   };
 
   return (
@@ -216,6 +243,14 @@ export default function RepositoryCodeExplorerPage() {
 
         {/* Action Button */}
         <div className="flex items-center gap-3 shrink-0">
+          <Link
+            href={`/dashboard/repositories/${repoId}/search`}
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-purple-950/40 hover:bg-purple-900/60 border border-purple-500/30 text-purple-300 hover:text-white text-xs font-mono transition-colors"
+          >
+            <Search className="w-3.5 h-3.5 text-purple-400" />
+            <span>AI Search</span>
+          </Link>
+
           <Link
             href={`/dashboard/repositories/${repoId}/analytics`}
             className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#161616] hover:bg-[#202020] border border-[#2A2A2A] text-neutral-300 hover:text-white text-xs font-mono transition-colors"
