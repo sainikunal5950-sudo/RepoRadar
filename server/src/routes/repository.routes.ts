@@ -32,8 +32,13 @@ import {
   getRepositoryIndexStatusHandler,
   searchRepositoryCodeHandler,
 } from "../controllers/repository.controller";
+import {
+  askRepositoryQuestionHandler,
+  getRepositoryConversationsHandler,
+} from "../controllers/chat.controller";
 
 import authMiddleware from "../middleware/authMiddleware";
+import aiRateLimit from "../middleware/aiRateLimit";
 import validate from "../middleware/validate";
 import {
   repositoryIdParamSchema,
@@ -41,7 +46,10 @@ import {
   analysisFileParamsSchema,
   searchCodeSchema,
 } from "../schemas/repository.schema";
-
+import {
+  chatQuestionSchema,
+  repositoryChatQuerySchema,
+} from "../schemas/chat.schema";
 
 const router = Router();
 
@@ -141,7 +149,14 @@ router.get("/:id/index-status", validate(repositoryIdParamSchema), getRepository
 // POST /api/repositories/:id/search-code - Semantic vector search across repository code chunks
 router.post("/:id/search-code", validate(searchCodeSchema), searchRepositoryCodeHandler);
 
+// POST /api/repositories/:id/chat - Ask question with RAG code context (rate limited)
+router.post("/:id/chat", aiRateLimit, validate(chatQuestionSchema), askRepositoryQuestionHandler);
+
+// GET /api/repositories/:id/chat/conversations - List user's conversations for this repository
+router.get("/:id/chat/conversations", validate(repositoryChatQuerySchema), getRepositoryConversationsHandler);
+
 export default router;
+
 
 
 

@@ -78,6 +78,14 @@ export const Tag = createIcon("Tag");
 export const Database = createIcon("Database");
 export const Compass = createIcon("Compass");
 export const Hash = createIcon("Hash");
+export const MessageSquare = createIcon("MessageSquare");
+export const Send = createIcon("Send");
+export const Trash2 = createIcon("Trash2");
+export const HelpCircle = createIcon("HelpCircle");
+export const CornerDownLeft = createIcon("CornerDownLeft");
+export const Terminal = createIcon("Terminal");
+export const Quote = createIcon("Quote");
+
 
 
 

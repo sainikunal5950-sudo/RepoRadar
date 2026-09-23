@@ -73,3 +73,56 @@ class HealthResponse(BaseModel):
 class ErrorResponse(BaseModel):
     error: str
     detail: Optional[str] = None
+
+
+class RAGChunkContext(BaseModel):
+    file_path: str = Field(..., description="File path of the code snippet")
+    start_line: int = Field(..., description="Start line number in the source file")
+    end_line: int = Field(..., description="End line number in the source file")
+    chunk_text: str = Field(..., description="Code snippet content")
+    chunk_type: Optional[str] = Field(None, description="Type of chunk (function, class, block)")
+    chunk_label: Optional[str] = Field(None, description="Symbol name or label")
+    score: Optional[float] = Field(None, description="Similarity score (0.0 - 1.0)")
+
+
+class ChatMessageItem(BaseModel):
+    role: str = Field(..., description="'user' or 'assistant'")
+    content: str = Field(..., description="Message text content")
+
+
+class ChatRespondRequest(BaseModel):
+    question: str = Field(..., description="User's natural language question")
+    retrieved_chunks: List[RAGChunkContext] = Field(
+        default_factory=list,
+        description="Top-k code chunks retrieved from vector search"
+    )
+    conversation_history: List[ChatMessageItem] = Field(
+        default_factory=list,
+        description="Previous turns of conversation for multi-turn context"
+    )
+
+
+class ChatRespondResponse(BaseModel):
+    answer: str = Field(..., description="Context-grounded assistant response")
+    cited_files: List[str] = Field(
+        default_factory=list,
+        description="List of file paths cited or referenced in the response"
+    )
+    retrieved_chunks_count: int = Field(
+        0,
+        description="Number of context chunks supplied for this answer"
+    )
+    tokens_used: Optional[int] = Field(
+        None,
+        description="Estimated token usage for the chat completion"
+    )
+
+
+class ExpandQueryRequest(BaseModel):
+    question: str = Field(..., description="User question to expand for semantic search")
+
+
+class ExpandQueryResponse(BaseModel):
+    original_query: str
+    expanded_query: str
+

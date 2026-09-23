@@ -312,6 +312,42 @@ Content-Type: application/json
   "limit": 5
 }
 
+### 44. Ask Question with RAG Code Context (Start New Conversation)
+# @name askChatQuestion
+POST {{baseUrl}}/api/repositories/{{repositoryId}}/chat
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "question": "How does authentication and token verification work in this repository?"
+}
+
+### 45. Ask Follow-up Question in Existing Conversation
+POST {{baseUrl}}/api/repositories/{{repositoryId}}/chat
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "question": "Where is the secret key defined or loaded for verifying those tokens?",
+  "conversationId": "{{askChatQuestion.response.body.data.conversationId}}"
+}
+
+### 46. List Repository Conversations
+GET {{baseUrl}}/api/repositories/{{repositoryId}}/chat/conversations
+Authorization: Bearer {{authToken}}
+Accept: application/json
+
+### 47. Get Conversation Messages History
+GET {{baseUrl}}/api/chat/conversations/{{conversationId}}/messages
+Authorization: Bearer {{authToken}}
+Accept: application/json
+
+### 48. Delete Conversation
+DELETE {{baseUrl}}/api/chat/conversations/{{conversationId}}
+Authorization: Bearer {{authToken}}
+Accept: application/json
+
+
 
 
 

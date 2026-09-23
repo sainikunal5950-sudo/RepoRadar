@@ -104,6 +104,39 @@ export interface AIChunkAndEmbedResponse {
   chunks: AICodeChunkWithEmbedding[];
 }
 
+export interface AIChatChunkContext {
+  file_path: string;
+  start_line: number;
+  end_line: number;
+  chunk_text: string;
+  chunk_type?: string;
+  chunk_label?: string;
+  score?: number;
+}
+
+export interface AIChatMessageItem {
+  role: string;
+  content: string;
+}
+
+export interface AIChatRespondRequest {
+  question: string;
+  retrieved_chunks: AIChatChunkContext[];
+  conversation_history?: AIChatMessageItem[];
+}
+
+export interface AIChatRespondResponse {
+  answer: string;
+  cited_files: string[];
+  retrieved_chunks_count: number;
+  tokens_used?: number;
+}
+
+export interface AIExpandQueryResponse {
+  original_query: string;
+  expanded_query: string;
+}
+
 export class AIServiceClient {
   private baseUrl: string;
   private apiKey: string;
@@ -302,8 +335,39 @@ export class AIServiceClient {
       }
     );
   }
+
+  /**
+   * Answers a question with context-grounded RAG generation
+   */
+  async chatRespond(
+    req: AIChatRespondRequest
+  ): Promise<AIChatRespondResponse> {
+    return this.request<AIChatRespondResponse>("/api/chat/respond", {
+      method: "POST",
+      body: JSON.stringify(req),
+    });
+  }
+
+  /**
+   * Expands a user query into search keywords
+   */
+  async expandQuery(question: string): Promise<string> {
+    try {
+      const res = await this.request<AIExpandQueryResponse>(
+        "/api/chat/expand-query",
+        {
+          method: "POST",
+          body: JSON.stringify({ question }),
+        }
+      );
+      return res.expanded_query || question;
+    } catch {
+      return question;
+    }
+  }
 }
 
 export const aiServiceClient = new AIServiceClient();
 export default aiServiceClient;
+
 

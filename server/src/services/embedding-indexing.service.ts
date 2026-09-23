@@ -96,11 +96,17 @@ export class EmbeddingIndexingService {
     }
 
     if (repository._count.files === 0) {
-      throw new AppError(
-        "No repository code files found. Please ingest the code tree first (POST /api/repositories/:id/fetch-code)",
-        400,
-        "CODE_NOT_FETCHED"
-      );
+      // Auto-fetch repository files from GitHub first
+      try {
+        const { codeFetchService } = await import("./code-fetch.service");
+        await codeFetchService.fetchAndStoreRepositoryCode(repositoryId, userId);
+      } catch (err: any) {
+        throw new AppError(
+          `Failed to automatically fetch repository code: ${err.message}. Please visit Code Explorer and click Fetch & Index.`,
+          400,
+          "CODE_FETCH_FAILED"
+        );
+      }
     }
 
     // Set status to processing immediately

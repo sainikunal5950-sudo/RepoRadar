@@ -232,6 +232,14 @@ export default function RepositoryDetailPage() {
             </Link>
 
             <Link
+              href={`/dashboard/repositories/${repoId}/chat`}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-semibold text-xs transition-all shadow-md cursor-pointer"
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>AI Repo Chat</span>
+            </Link>
+
+            <Link
               href={`/dashboard/repositories/${repoId}/search`}
               className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-purple-950/40 hover:bg-purple-900/60 border border-purple-500/30 hover:border-purple-500/60 text-purple-300 hover:text-white font-semibold text-xs transition-all cursor-pointer"
             >

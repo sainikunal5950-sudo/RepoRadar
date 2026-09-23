@@ -94,6 +94,58 @@ class LLMClient:
             )
             return response.choices[0].message.content or ""
 
+    @retry(
+        stop=stop_after_attempt(3),
+        wait=wait_exponential(multiplier=1, min=2, max=10),
+        reraise=True,
+    )
+    async def complete_chat(
+        self,
+        system_prompt: str,
+        messages: list[Dict[str, str]],
+        max_tokens: Optional[int] = None,
+        temperature: Optional[float] = None,
+    ) -> str:
+        """
+        Executes multi-turn conversation completion with exponential backoff retries.
+        """
+        tokens = max_tokens or settings.MAX_TOKENS
+        temp = temperature if temperature is not None else settings.TEMPERATURE
+
+        if self.provider == "anthropic":
+            if not self.anthropic_client:
+                raise RuntimeError("Anthropic API key is not configured")
+
+            anthropic_messages = [
+                {"role": m["role"], "content": m["content"]}
+                for m in messages
+                if m.get("content")
+            ]
+            response = await self.anthropic_client.messages.create(
+                model=self.model,
+                max_tokens=tokens,
+                temperature=temp,
+                system=system_prompt,
+                messages=anthropic_messages,
+            )
+            return response.content[0].text
+        else:
+            if not self.openai_client:
+                raise RuntimeError("OpenAI API key is not configured")
+
+            openai_messages = [{"role": "system", "content": system_prompt}]
+            for m in messages:
+                if m.get("content"):
+                    openai_messages.append({"role": m["role"], "content": m["content"]})
+
+            response = await self.openai_client.chat.completions.create(
+                model=self.model,
+                messages=openai_messages,
+                max_tokens=tokens,
+                temperature=temp,
+            )
+            return response.choices[0].message.content or ""
+
     async def complete_json(
         self,
         system_prompt: str,
@@ -120,3 +172,4 @@ class LLMClient:
 
 
 llm_client = LLMClient()
+

@@ -471,11 +471,36 @@ To configure the Atlas Vector Search index on MongoDB Atlas:
 - `GET /api/repositories/:id/index-status` - Check indexing progress (`not_started` | `processing` | `completed` | `failed`) and chunk count.
 - `POST /api/repositories/:id/search-code` - Execute semantic vector search across repository code chunks (`{ query: string, limit?: number }`).
 
+### 💬 Module 12: Conversational RAG Repository Chat & Context-Aware Assistant
+
+Module 12 builds a conversational AI chat assistant where users can ask natural language questions about their repository, getting accurate, context-grounded answers with file/line citations and multi-turn conversation continuity.
+
+#### How RAG (Retrieval-Augmented Generation) Works in RepoRadar
+1. **Query Expansion (`ai-service/app/services/query_expansion.py`)**:
+   - Transforms conversational questions (e.g. *"how does login work"*) into search keywords (*"user authentication login jwt token verification"*).
+2. **Context Retrieval (`server/src/services/vector-search.service.ts`)**:
+   - Queries MongoDB Atlas Vector Search for the top-8 most semantically relevant code chunks from the repository index.
+3. **Strict Grounded Generation (`ai-service/app/services/rag_chat.py`)**:
+   - Formats retrieved chunks with file paths and line ranges into a context block.
+   - Passes conversation history (up to last 10 messages) for multi-turn follow-ups.
+   - Uses low-temperature LLM generation ($T=0.15$) with explicit instructions never to hallucinate external code. If context is insufficient, it explicitly responds: *"I don't have enough context in the indexed codebase to answer that."*
+4. **Source Attribution & Deep Linking (`client/src/components/ui/CitedFileChip.tsx`)**:
+   - Surfaces cited file paths as clickable badges (`file_path:startLine-endLine`).
+   - Clicking a chip opens the repository's Code Explorer with the exact file and lines highlighted.
+5. **Chat History Management**:
+   - Stores sessions in `ChatConversation` and `ChatMessage` models with token estimation and rate limiting.
+
+#### API Endpoints
+- `POST /api/repositories/:id/chat` - Ask question with RAG code context (`{ question: string, conversationId?: string }`). Protected & rate-limited.
+- `GET /api/repositories/:id/chat/conversations` - List past conversations for a repository.
+- `GET /api/chat/conversations/:id/messages` - Retrieve full message history with citations.
+- `DELETE /api/chat/conversations/:id` - Delete a conversation and its messages.
+
 ---
 
 ### 🧪 Testing the API
 
-A complete REST test suite is included in [`server/requests.http`](file:///c:/Users/ASUS/OneDrive/Desktop/BEE/server/requests.http). You can execute authentication, GitHub OAuth user sync, repository syncing, detailed telemetry ingestion, source code indexing, static code analysis, health score calculation, selection toggling, code vector search, and error edge cases using the VS Code **REST Client** extension, Postman, or `curl`.
+A complete REST test suite is included in [`server/requests.http`](file:///c:/Users/ASUS/OneDrive/Desktop/BEE/server/requests.http). You can execute authentication, GitHub OAuth user sync, repository syncing, detailed telemetry ingestion, source code indexing, static code analysis, health score calculation, selection toggling, code vector search, RAG repository chat, and error edge cases using the VS Code **REST Client** extension, Postman, or `curl`.
 
 ---
 
@@ -504,10 +529,11 @@ The frontend implements a dark monochrome aesthetic inspired by Vercel, Linear, 
 - [x] **Module 9:** Developer Analytics, Activity Heatmap & Technical Debt Hotspot Engine (`/dashboard/repositories/:id/analytics`, Contributor Leaderboard, Recharts Timeline, 7x24 Punch Card Heatmap, Hotspot Churn & Debt Score).
 - [x] **Module 10:** Dedicated AI Microservice & Intelligent Code Explanation / Automated Issue Remediation (`ai-service` on FastAPI, `/api/explain/code`, `/api/explain/file`, `/api/suggest/fix`, token tracking).
 - [x] **Module 11:** Code Vector Embeddings & MongoDB Atlas Vector Search (`code_embeddings` native collection, semantic code chunking with ~20% overlap, Atlas `$vectorSearch`, in-memory cosine similarity fallback, `/dashboard/repositories/:id/search` interactive UI).
-- [ ] **Module 12:** Conversational RAG Repository Chat & Context-Aware Assistant.
+- [x] **Module 12:** Conversational RAG Repository Chat & Context-Aware Assistant (`/dashboard/repositories/:id/chat`, Query expansion, grounded generation, source attribution chips, multi-turn history).
 
 ---
 
 ## 📄 License
 MIT License.
+
 

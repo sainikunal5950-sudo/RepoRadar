@@ -12,18 +12,19 @@ datasource db {
 
 // Models
 model User {
-  id                  String       @id @default(auto()) @map("_id") @db.ObjectId
+  id                  String             @id @default(auto()) @map("_id") @db.ObjectId
   name                String
-  email               String       @unique
-  password            String?      // Nullable for OAuth users
+  email               String             @unique
+  password            String?            // Nullable for OAuth users
   github_id           Int?
   github_username     String?
-  github_access_token String?      // Encrypted AES-256 string
+  github_access_token String?            // Encrypted AES-256 string
   repositories        Repository[]
   aiUsageLogs         AIUsageLog[]
-  createdAt           DateTime     @default(now())
+  chatConversations   ChatConversation[]
+  createdAt           DateTime           @default(now())
 
-  updatedAt           DateTime     @updatedAt
+  updatedAt           DateTime           @updatedAt
 }
 
 model Repository {
@@ -49,6 +50,7 @@ model Repository {
   codeIssues           CodeIssue[]
   analysisSummary      AnalysisSummary?
   healthRecords        RepositoryHealth[]
+  chatConversations    ChatConversation[]
   indexing_status      String               @default("not_started")
   total_chunks_indexed Int                  @default(0)
   createdAt            DateTime             @default(now())
@@ -87,7 +89,7 @@ model AIUsageLog {
   id               String   @id @default(auto()) @map("_id") @db.ObjectId
   user_id          String   @db.ObjectId
   repository_id    String?  @db.ObjectId
-  operation_type   String   // "explain_code" | "explain_file" | "suggest_fix" | "suggest_fixes_batch"
+  operation_type   String   // "explain_code" | "explain_file" | "suggest_fix" | "suggest_fixes_batch" | "rag_chat"
   tokens_estimated Int?
   success          Boolean  @default(true)
   error_message    String?
@@ -300,5 +302,37 @@ model RepositoryHealth {
 
   @@index([repository_id])
   @@index([repository_id, calculated_at])
+}
+
+model ChatConversation {
+  id            String        @id @default(auto()) @map("_id") @db.ObjectId
+  repository_id String        @db.ObjectId
+  user_id       String        @db.ObjectId
+  title         String?
+  messages      ChatMessage[]
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  repository    Repository    @relation(fields: [repository_id], references: [id], onDelete: Cascade)
+  user          User          @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([repository_id])
+  @@index([user_id])
+  @@index([repository_id, user_id])
+}
+
+model ChatMessage {
+  id               String           @id @default(auto()) @map("_id") @db.ObjectId
+  conversation_id  String           @db.ObjectId
+  role             String           // "user" | "assistant"
+  content          String
+  retrieved_chunks String?          // JSON array string of { file_path, start_line, end_line, score }
+  tokens_used      Int?
+  createdAt        DateTime         @default(now())
+
+  conversation     ChatConversation @relation(fields: [conversation_id], references: [id], onDelete: Cascade)
+
+  @@index([conversation_id])
+  @@index([conversation_id, createdAt])
 }
 
