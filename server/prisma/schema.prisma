@@ -51,6 +51,10 @@ model Repository {
   analysisSummary      AnalysisSummary?
   healthRecords        RepositoryHealth[]
   chatConversations    ChatConversation[]
+  pullRequests         PullRequest[]
+  webhook_id           Int?
+  webhook_secret       String?              // Encrypted AES-256 string
+  pr_comments_enabled  Boolean              @default(false)
   indexing_status      String               @default("not_started")
   total_chunks_indexed Int                  @default(0)
   createdAt            DateTime             @default(now())
@@ -334,5 +338,73 @@ model ChatMessage {
 
   @@index([conversation_id])
   @@index([conversation_id, createdAt])
+}
+
+model PullRequest {
+  id                 String              @id @default(auto()) @map("_id") @db.ObjectId
+  repository_id      String              @db.ObjectId
+  github_pr_id       Int                 @unique
+  pr_number          Int
+  title              String
+  author_username    String
+  status             String              // "open" | "closed" | "merged"
+  base_branch        String
+  head_branch        String
+  github_pr_url      String
+  created_at_github  DateTime
+  last_reviewed_at   DateTime?
+  review_status      String              @default("pending") // "pending" | "reviewing" | "completed" | "failed"
+  error_message      String?
+  reviews            PullRequestReview[]
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+
+  repository         Repository          @relation(fields: [repository_id], references: [id], onDelete: Cascade)
+
+  @@index([repository_id])
+  @@index([repository_id, pr_number])
+  @@index([repository_id, review_status])
+}
+
+model PullRequestReview {
+  id                   String             @id @default(auto()) @map("_id") @db.ObjectId
+  pull_request_id      String             @db.ObjectId
+  risk_level           String             // "low" | "medium" | "high" | "critical"
+  summary              String
+  recommendation       String?
+  issues_found         Int                @default(0)
+  critical_issues_count Int               @default(0)
+  files_changed_count  Int                @default(0)
+  additions            Int                @default(0)
+  deletions            Int                @default(0)
+  ai_review_text       String
+  posted_to_github     Boolean            @default(false)
+  github_comment_url   String?
+  issues               PullRequestIssue[]
+  createdAt            DateTime           @default(now())
+
+  pullRequest          PullRequest        @relation(fields: [pull_request_id], references: [id], onDelete: Cascade)
+
+  @@index([pull_request_id])
+  @@index([pull_request_id, risk_level])
+}
+
+model PullRequestIssue {
+  id                    String            @id @default(auto()) @map("_id") @db.ObjectId
+  pull_request_review_id String           @db.ObjectId
+  file_path             String
+  line_number           Int
+  issue_type            String            // "security" | "performance" | "bug" | "code-smell" | "maintainability"
+  severity              String            // "critical" | "high" | "medium" | "low"
+  message               String
+  is_new_issue          Boolean           @default(true)
+  code_snippet          String?
+  suggested_fix         String?
+  createdAt             DateTime          @default(now())
+
+  review                PullRequestReview @relation(fields: [pull_request_review_id], references: [id], onDelete: Cascade)
+
+  @@index([pull_request_review_id])
+  @@index([pull_request_review_id, severity])
 }
 

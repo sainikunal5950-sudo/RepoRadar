@@ -12,6 +12,7 @@ export const config = {
   encryptionKey: process.env.ENCRYPTION_KEY || "reporadar-default-encryption-key-32b",
   githubClientId: process.env.GITHUB_CLIENT_ID || "",
   githubClientSecret: process.env.GITHUB_CLIENT_SECRET || "",
+  webhookBaseUrl: process.env.WEBHOOK_BASE_URL || `http://localhost:${process.env.PORT || 5000}`,
 };
 
 export default config;

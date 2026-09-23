@@ -403,6 +403,135 @@ export async function fetchFileContent(
   }
 }
 
+export interface GitHubPRFileDiff {
+  file_path: string;
+  filename: string;
+  status: "added" | "modified" | "removed" | "renamed" | string;
+  additions: number;
+  deletions: number;
+  changes: number;
+  patch?: string;
+  raw_url?: string;
+}
+
+/**
+ * Registers a GitHub repository webhook for `pull_request` events
+ */
+export async function createRepositoryWebhook(
+  octokit: Octokit,
+  owner: string,
+  repo: string,
+  webhookUrl: string,
+  secret: string
+): Promise<number> {
+  try {
+    const response = await octokit.rest.repos.createWebhook({
+      owner,
+      repo,
+      name: "web",
+      active: true,
+      events: ["pull_request"],
+      config: {
+        url: webhookUrl,
+        content_type: "json",
+        secret,
+        insecure_ssl: "0",
+      },
+    });
+
+    return response.data.id;
+  } catch (error: any) {
+    const errorMsg = error instanceof Error ? error.message : "Failed to register webhook";
+    throw new Error(`GitHub webhook registration failed for '${owner}/${repo}': ${errorMsg}`);
+  }
+}
+
+/**
+ * Deletes a registered webhook from a GitHub repository
+ */
+export async function deleteRepositoryWebhook(
+  octokit: Octokit,
+  owner: string,
+  repo: string,
+  hookId: number
+): Promise<void> {
+  try {
+    await octokit.rest.repos.deleteWebhook({
+      owner,
+      repo,
+      hook_id: hookId,
+    });
+  } catch (error: any) {
+    // If webhook already deleted (404), treat as success
+    if (error.status === 404) {
+      return;
+    }
+    const errorMsg = error instanceof Error ? error.message : "Failed to delete webhook";
+    throw new Error(`GitHub webhook deletion failed: ${errorMsg}`);
+  }
+}
+
+/**
+ * Fetches changed files and unified diff patches for a pull request
+ */
+export async function fetchPullRequestDiff(
+  octokit: Octokit,
+  owner: string,
+  repo: string,
+  prNumber: number
+): Promise<GitHubPRFileDiff[]> {
+  try {
+    const response = await octokit.rest.pulls.listFiles({
+      owner,
+      repo,
+      pull_number: prNumber,
+      per_page: 100,
+    });
+
+    return response.data.map((file) => ({
+      file_path: file.filename,
+      filename: file.filename,
+      status: file.status,
+      additions: file.additions,
+      deletions: file.deletions,
+      changes: file.changes,
+      patch: file.patch,
+      raw_url: file.raw_url,
+    }));
+  } catch (error: any) {
+    const errorMsg = error instanceof Error ? error.message : "Failed to fetch PR diff";
+    throw new Error(`Failed to fetch diff for PR #${prNumber}: ${errorMsg}`);
+  }
+}
+
+/**
+ * Posts an issue comment on a pull request with AI review notes
+ */
+export async function postPullRequestComment(
+  octokit: Octokit,
+  owner: string,
+  repo: string,
+  prNumber: number,
+  commentBody: string
+): Promise<{ id: number; html_url: string }> {
+  try {
+    const response = await octokit.rest.issues.createComment({
+      owner,
+      repo,
+      issue_number: prNumber,
+      body: commentBody,
+    });
+
+    return {
+      id: response.data.id,
+      html_url: response.data.html_url,
+    };
+  } catch (error: any) {
+    const errorMsg = error instanceof Error ? error.message : "Failed to post PR comment";
+    throw new Error(`Failed to post comment on PR #${prNumber}: ${errorMsg}`);
+  }
+}
+
 export default {
   initializeOctokit,
   fetchUserRepositories,
@@ -414,5 +543,10 @@ export default {
   checkRateLimit,
   fetchRepositoryGitTree,
   fetchFileContent,
+  createRepositoryWebhook,
+  deleteRepositoryWebhook,
+  fetchPullRequestDiff,
+  postPullRequestComment,
 };
+
 

@@ -16,8 +16,14 @@ app.use(
   })
 );
 
-// 2. Body Parser Middleware
-app.use(express.json());
+// 2. Body Parser Middleware (with rawBody capture for webhook signature verification)
+app.use(
+  express.json({
+    verify: (req: any, _res: any, buf: Buffer) => {
+      req.rawBody = buf;
+    },
+  })
+);
 
 // 3. Request Logging Middleware (disabled in test)
 if (process.env.NODE_ENV !== "test") {

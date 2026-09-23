@@ -36,6 +36,12 @@ import {
   askRepositoryQuestionHandler,
   getRepositoryConversationsHandler,
 } from "../controllers/chat.controller";
+import {
+  enableWebhook,
+  disableWebhook,
+  toggleComments,
+  listPullRequests,
+} from "../controllers/pull-request.controller";
 
 import authMiddleware from "../middleware/authMiddleware";
 import aiRateLimit from "../middleware/aiRateLimit";
@@ -154,6 +160,18 @@ router.post("/:id/chat", aiRateLimit, validate(chatQuestionSchema), askRepositor
 
 // GET /api/repositories/:id/chat/conversations - List user's conversations for this repository
 router.get("/:id/chat/conversations", validate(repositoryChatQuerySchema), getRepositoryConversationsHandler);
+
+// POST /api/repositories/:id/webhook/enable - Register GitHub webhook for automated PR reviews
+router.post("/:id/webhook/enable", validate(repositoryIdParamSchema), enableWebhook);
+
+// POST /api/repositories/:id/webhook/disable - Remove GitHub webhook for PR reviews
+router.post("/:id/webhook/disable", validate(repositoryIdParamSchema), disableWebhook);
+
+// PATCH /api/repositories/:id/webhook/toggle-comments - Toggle GitHub PR comment posting
+router.patch("/:id/webhook/toggle-comments", validate(repositoryIdParamSchema), toggleComments);
+
+// GET /api/repositories/:id/pull-requests - List pull requests and their review statuses
+router.get("/:id/pull-requests", validate(repositoryIdParamSchema), listPullRequests);
 
 export default router;
 

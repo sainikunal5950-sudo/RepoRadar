@@ -126,3 +126,25 @@ class ExpandQueryResponse(BaseModel):
     original_query: str
     expanded_query: str
 
+
+class PRReviewIssueItem(BaseModel):
+    filePath: str
+    lineNumber: int
+    severity: str
+    issueType: str
+    message: str
+
+
+class PRReviewSummarizeRequest(BaseModel):
+    pr_title: str = Field("", description="Title of the pull request")
+    files_changed: List[str] = Field(default_factory=list, description="List of modified or added file paths")
+    diff_summary: str = Field("", description="Aggregated added/modified code diffs")
+    issues_found: List[PRReviewIssueItem] = Field(default_factory=list, description="Static code issues detected in diff")
+
+
+class PRReviewSummarizeResponse(BaseModel):
+    summary: str = Field(..., description="High-level overview of PR changes")
+    risk_assessment: str = Field(..., description="Assessment of risks, security concerns, or regressions")
+    recommendation: str = Field(..., description="Actionable recommendation (Safe to merge / Requires changes / etc.)")
+
+

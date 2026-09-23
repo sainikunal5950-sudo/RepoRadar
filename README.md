@@ -498,9 +498,61 @@ Module 12 builds a conversational AI chat assistant where users can ask natural 
 
 ---
 
+### 🔔 Module 13: Automated AI-Powered Pull Request Reviews & GitHub Webhooks
+
+Module 13 enables real-time reactive code intelligence triggered automatically by GitHub Webhook events whenever pull requests are opened, synchronized, or updated on connected repositories.
+
+#### Real-Time PR Review Architecture
+1. **Cryptographic HMAC-SHA256 Signature Verification (`server/src/services/webhook-verify.service.ts`)**:
+   - Webhook events sent to `POST /api/webhooks/github` are signed with GitHub's `X-Hub-Signature-256` header.
+   - Server computes an HMAC-SHA256 hash using the repository's AES-256 encrypted `webhook_secret` against the exact raw request buffer.
+   - Constant-time verification (`crypto.timingSafeEqual`) rejects unauthorized, spoofed, or tampered payloads with `401 Unauthorized`.
+2. **Sub-Second Immediate Webhook Response**:
+   - The webhook receiver immediately responds with `200 OK` (under 100ms) to ensure GitHub never times out.
+   - Delegated background execution processes the diff analysis asynchronously.
+3. **Focused Diff-Only Static Rule Engine (`server/src/services/pr-review.service.ts`)**:
+   - Fetches PR changed files and unified git patch diffs via Octokit (`fetchPullRequestDiff`).
+   - Parses only the added/modified code lines (`+` lines) and evaluates them using Module 7's static rule engine (Security, Bugs, Performance, Code Smells).
+   - Keeps PR reviews instantaneous and focused exclusively on newly introduced modifications rather than flagging pre-existing untouched legacy code.
+4. **Weighted PR Risk Level Calculation**:
+   - `critical`: Any critical security/reliability issues detected.
+   - `high`: High-severity issues detected in changed lines.
+   - `medium`: Moderate issues found, OR sensitive files (auth, tokens, crypto, permissions, `.env`) touched even without static violations.
+   - `low`: Clean diff with no rule violations or sensitive changes.
+5. **AI Review Synthesis & Optional GitHub PR Commenting**:
+   - Calls the dedicated AI microservice (`POST /api/pr-review/summarize`) to produce an executive summary, risk assessment, and merge recommendation.
+   - Optionally posts formatted review notes as a comment directly on the GitHub PR if comment posting is enabled for the repository.
+6. **Dedicated PR Review Dashboard**:
+   - `/dashboard/repositories/:id/pull-requests`: Toggle webhook automation & PR comment settings, view open/merged PRs with color-coded risk badges.
+   - `/dashboard/repositories/:id/pull-requests/:prId`: Comprehensive PR review report with AI insights, file diff metrics, line-level rule violations, and one-click re-evaluation.
+
+#### Local Development with ngrok / smee.io
+To receive GitHub webhooks locally on your development machine:
+1. Start the server on port 5000 (`npm run dev` in `server/`).
+2. Expose the port using ngrok:
+   ```bash
+   ngrok http 5000
+   ```
+3. Copy the forwarded HTTPS URL (e.g. `https://xxxx-xx-xx.ngrok-free.app`) and set it in `server/.env`:
+   ```env
+   WEBHOOK_BASE_URL="https://xxxx-xx-xx.ngrok-free.app"
+   ```
+4. On any connected repository page in the RepoRadar dashboard, toggle **"Automated Reviews"** ON. RepoRadar will automatically register the GitHub webhook with your public ngrok URL!
+
+#### API Endpoints
+- `POST /api/webhooks/github` - Public GitHub webhook receiver with HMAC signature verification.
+- `POST /api/repositories/:id/webhook/enable` - Register GitHub repository webhook for PR events.
+- `POST /api/repositories/:id/webhook/disable` - Unregister and remove webhook from GitHub repository.
+- `PATCH /api/repositories/:id/webhook/toggle-comments` - Toggle automatic GitHub PR comment posting (`{ enabled: boolean }`).
+- `GET /api/repositories/:id/pull-requests` - List all PRs with risk level and review status.
+- `GET /api/pull-requests/:id/review` - Retrieve full review report with line-level diff issues.
+- `POST /api/pull-requests/:id/re-review` - Manually trigger re-evaluation of PR review.
+
+---
+
 ### 🧪 Testing the API
 
-A complete REST test suite is included in [`server/requests.http`](file:///c:/Users/ASUS/OneDrive/Desktop/BEE/server/requests.http). You can execute authentication, GitHub OAuth user sync, repository syncing, detailed telemetry ingestion, source code indexing, static code analysis, health score calculation, selection toggling, code vector search, RAG repository chat, and error edge cases using the VS Code **REST Client** extension, Postman, or `curl`.
+A complete REST test suite is included in [`server/requests.http`](file:///c:/Users/ASUS/OneDrive/Desktop/BEE/server/requests.http). You can execute authentication, GitHub OAuth user sync, repository syncing, detailed telemetry ingestion, source code indexing, static code analysis, health score calculation, selection toggling, code vector search, RAG repository chat, and automated PR reviews using the VS Code **REST Client** extension, Postman, or `curl`.
 
 ---
 
@@ -527,6 +579,16 @@ The frontend implements a dark monochrome aesthetic inspired by Vercel, Linear, 
 - [x] **Module 7:** Static Rule-Based Code Analysis Engine & Dashboard (`/dashboard/repositories/:id/analysis`, Security/Bug/Performance/Code-Smell scanning, filterable Issue Table, Analysis Summary).
 - [x] **Module 8:** Health Radar Scorecard, Analytics Engine & Interactive Visualizer (`/dashboard/repositories/:id/health`, Recharts visualizations, Grade badges, Worst-First multi-repo overview).
 - [x] **Module 9:** Developer Analytics, Activity Heatmap & Technical Debt Hotspot Engine (`/dashboard/repositories/:id/analytics`, Contributor Leaderboard, Recharts Timeline, 7x24 Punch Card Heatmap, Hotspot Churn & Debt Score).
+- [x] **Module 10:** Dedicated AI Microservice & Intelligent Code Explanation / Automated Issue Remediation (`ai-service` on FastAPI, `/api/explain/code`, `/api/explain/file`, `/api/suggest/fix`, token tracking).
+- [x] **Module 11:** Code Vector Embeddings & MongoDB Atlas Vector Search (`code_embeddings` native collection, semantic code chunking with ~20% overlap, Atlas `$vectorSearch`, in-memory cosine similarity fallback, `/dashboard/repositories/:id/search` interactive UI).
+- [x] **Module 12:** Conversational RAG Repository Chat & Context-Aware Assistant (`/dashboard/repositories/:id/chat`, Query expansion, grounded generation, source attribution chips, multi-turn history).
+- [x] **Module 13:** Automated AI-Powered Pull Request Reviews & GitHub Webhooks (`/dashboard/repositories/:id/pull-requests`, HMAC-SHA256 signature verification, diff added-lines analysis, AI summary & risk scoring, optional GitHub PR comments).
+
+---
+
+## 📄 License
+MIT License.
+rd, Recharts Timeline, 7x24 Punch Card Heatmap, Hotspot Churn & Debt Score).
 - [x] **Module 10:** Dedicated AI Microservice & Intelligent Code Explanation / Automated Issue Remediation (`ai-service` on FastAPI, `/api/explain/code`, `/api/explain/file`, `/api/suggest/fix`, token tracking).
 - [x] **Module 11:** Code Vector Embeddings & MongoDB Atlas Vector Search (`code_embeddings` native collection, semantic code chunking with ~20% overlap, Atlas `$vectorSearch`, in-memory cosine similarity fallback, `/dashboard/repositories/:id/search` interactive UI).
 - [x] **Module 12:** Conversational RAG Repository Chat & Context-Aware Assistant (`/dashboard/repositories/:id/chat`, Query expansion, grounded generation, source attribution chips, multi-turn history).

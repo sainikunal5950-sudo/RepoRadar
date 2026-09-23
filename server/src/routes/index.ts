@@ -6,6 +6,8 @@ import userRoutes from "./user.routes";
 import repositoryRoutes from "./repository.routes";
 import aiRoutes from "./ai.routes";
 import chatRoutes from "./chat.routes";
+import webhookRoutes from "./webhook.routes";
+import pullRequestRoutes from "./pull-request.routes";
 
 const router = Router();
 
@@ -17,6 +19,8 @@ router.use("/projects", projectRoutes);
 router.use("/repositories", repositoryRoutes);
 router.use("/ai", aiRoutes);
 router.use("/chat", chatRoutes);
+router.use("/webhooks", webhookRoutes);
+router.use("/pull-requests", pullRequestRoutes);
 
 export default router;
 

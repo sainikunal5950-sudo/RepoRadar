@@ -248,6 +248,14 @@ export default function RepositoryDetailPage() {
             </Link>
 
             <Link
+              href={`/dashboard/repositories/${repoId}/pull-requests`}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-purple-900/40 hover:bg-purple-900/70 border border-purple-500/40 hover:border-purple-400 text-purple-200 hover:text-white font-semibold text-xs transition-all cursor-pointer shadow-sm"
+            >
+              <GitPullRequest className="w-3.5 h-3.5 text-purple-400" />
+              <span>PR Reviews</span>
+            </Link>
+
+            <Link
               href={`/dashboard/repositories/${repoId}/code`}
               className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#181818] hover:bg-[#222222] border border-[#2E2E2E] hover:border-neutral-500 text-white font-semibold text-xs transition-all cursor-pointer"
             >

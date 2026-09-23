@@ -121,3 +121,48 @@ Instructions:
 
 Expanded Query:"""
 
+
+def get_pr_review_prompt(
+    pr_title: str,
+    files_changed: List[str],
+    diff_summary: str,
+    issues_found: List[dict],
+) -> str:
+    files_str = "\n".join([f"- {f}" for f in files_changed[:25]])
+    issues_str = ""
+    if issues_found:
+        issues_str = "\n".join(
+            [
+                f"- [{i.get('severity', 'medium').upper()}] {i.get('filePath')}:{i.get('lineNumber')} - {i.get('message')}"
+                for i in issues_found[:15]
+            ]
+        )
+    else:
+        issues_str = "No static analysis rule violations detected in changed lines."
+
+    return f"""You are RepoRadar's automated AI Pull Request Reviewer.
+Your goal is to provide a concise, high-signal, skimmable PR review for engineers.
+
+PR Title: "{pr_title}"
+
+Files Changed ({len(files_changed)} files):
+{files_str}
+
+Diff Summary of Added / Modified Lines:
+```
+{diff_summary[:4000]}
+```
+
+Static Code Issues Detected in Changed Lines:
+{issues_str}
+
+Task:
+Analyze the PR diff and detected issues. Generate a structured JSON response with:
+- "summary": A concise 2-3 sentence overview in plain language explaining what this PR accomplishes and its architectural impact.
+- "risk_assessment": A 1-2 sentence assessment highlighting potential risks, security concerns, or architectural regressions (or why it looks clean).
+- "recommendation": A single clear actionable recommendation (e.g., "Safe to merge", "Review security issues before merging", "Requires changes before merge", "Approve with minor suggestions").
+
+Respond ONLY with valid JSON with keys "summary", "risk_assessment", and "recommendation". Do not include markdown code fences or other text.
+"""
+
+

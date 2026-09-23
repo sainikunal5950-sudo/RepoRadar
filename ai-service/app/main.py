@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app.config import settings
-from app.routers import health, explain, suggest, embeddings, chat
+from app.routers import health, explain, suggest, embeddings, chat, pr_review
 
 # Logging setup
 logging.basicConfig(
@@ -97,6 +97,11 @@ app.include_router(
     chat.router,
     dependencies=[Depends(verify_api_key)],
 )
+app.include_router(
+    pr_review.router,
+    dependencies=[Depends(verify_api_key)],
+)
+
 
 
 

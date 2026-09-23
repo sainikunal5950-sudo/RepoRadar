@@ -99,7 +99,7 @@ export class EmbeddingIndexingService {
       // Auto-fetch repository files from GitHub first
       try {
         const { codeFetchService } = await import("./code-fetch.service");
-        await codeFetchService.fetchAndStoreRepositoryCode(repositoryId, userId);
+        await codeFetchService.fetchAndIndexRepositoryCode(userId, repositoryId);
       } catch (err: any) {
         throw new AppError(
           `Failed to automatically fetch repository code: ${err.message}. Please visit Code Explorer and click Fetch & Index.`,

@@ -137,6 +137,27 @@ export interface AIExpandQueryResponse {
   expanded_query: string;
 }
 
+export interface AIPRReviewIssueItem {
+  filePath: string;
+  lineNumber: number;
+  severity: string;
+  issueType: string;
+  message: string;
+}
+
+export interface AIPRReviewSummarizeRequest {
+  pr_title: string;
+  files_changed: string[];
+  diff_summary: string;
+  issues_found: AIPRReviewIssueItem[];
+}
+
+export interface AIPRReviewSummarizeResponse {
+  summary: string;
+  risk_assessment: string;
+  recommendation: string;
+}
+
 export class AIServiceClient {
   private baseUrl: string;
   private apiKey: string;
@@ -364,6 +385,21 @@ export class AIServiceClient {
     } catch {
       return question;
     }
+  }
+
+  /**
+   * Summarizes a PR diff, evaluates detected issues, and provides risk recommendation
+   */
+  async summarizePullRequestReview(
+    req: AIPRReviewSummarizeRequest
+  ): Promise<AIPRReviewSummarizeResponse> {
+    return this.request<AIPRReviewSummarizeResponse>(
+      "/api/pr-review/summarize",
+      {
+        method: "POST",
+        body: JSON.stringify(req),
+      }
+    );
   }
 }
 
