@@ -122,3 +122,29 @@ def test_suggest_fixes_batch_success(mock_llm):
     data = response.json()
     assert data["total_processed"] == 1
     assert len(data["fixes"]) == 1
+
+
+@patch("app.services.llm_client.llm_client.complete_json", new_callable=AsyncMock)
+def test_pr_review_summarize_success(mock_llm):
+    mock_llm.return_value = {
+        "summary": "This PR refactors auth token verification.",
+        "risk_assessment": "Low risk refactoring with clean rule checks.",
+        "recommendation": "Safe to merge",
+    }
+
+    response = client.post(
+        "/api/pr-review/summarize",
+        json={
+            "pr_title": "Refactor auth tokens",
+            "files_changed": ["src/auth.ts"],
+            "diff_summary": "+ const verified = true;",
+            "issues_found": [],
+        },
+        headers={"X-API-Key": VALID_API_KEY},
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+    assert "refactors auth token" in data["summary"]
+    assert data["recommendation"] == "Safe to merge"
+
