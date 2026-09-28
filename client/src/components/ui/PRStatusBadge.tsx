@@ -1,5 +1,5 @@
 import React from "react";
-import { GitPullRequest, GitMerge, CheckCircle2, XCircle } from "lucide-react";
+import { GitPullRequest, GitMerge, CheckCircle2, AlertCircle } from "lucide-react";
 
 export type PRStatusType = "open" | "closed" | "merged" | string;
 
@@ -31,7 +31,7 @@ const STATUS_CONFIG: Record<
     bg: "bg-neutral-900/60",
     text: "text-neutral-400",
     border: "border-neutral-700",
-    icon: XCircle,
+    icon: AlertCircle,
   },
 };
 

@@ -1,5 +1,5 @@
 import React from "react";
-import { ShieldCheck, ShieldAlert, AlertTriangle, AlertOctagon } from "lucide-react";
+import { ShieldCheck, ShieldAlert, AlertCircle } from "lucide-react";
 
 export type RiskLevel = "low" | "medium" | "high" | "critical" | string;
 
@@ -20,7 +20,7 @@ const RISK_CONFIG: Record<
     text: "text-red-400",
     border: "border-red-500/40",
     glow: "shadow-[0_0_15px_rgba(239,68,68,0.2)]",
-    icon: AlertOctagon,
+    icon: ShieldAlert,
   },
   high: {
     label: "High Risk",
@@ -36,7 +36,7 @@ const RISK_CONFIG: Record<
     text: "text-yellow-400",
     border: "border-yellow-500/40",
     glow: "shadow-[0_0_15px_rgba(234,179,8,0.15)]",
-    icon: AlertTriangle,
+    icon: AlertCircle,
   },
   low: {
     label: "Low Risk",

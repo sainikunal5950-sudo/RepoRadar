@@ -1,12 +1,9 @@
 import React from "react";
 import {
   Sparkles,
-  ShieldCheck,
   ExternalLink,
   FileCode2,
-  PlusCircle,
-  MinusCircle,
-  AlertTriangle,
+  AlertCircle,
   CheckCircle2,
 } from "lucide-react";
 import RiskLevelBadge, { RiskLevel } from "./RiskLevelBadge";
@@ -69,13 +66,11 @@ export default function PRReviewSummaryCard({
             <span>{filesChangedCount} files</span>
           </div>
 
-          <div className="flex items-center gap-1 text-emerald-400">
-            <PlusCircle className="w-3.5 h-3.5" />
+          <div className="flex items-center gap-1 text-emerald-400 font-semibold">
             <span>+{additions}</span>
           </div>
 
-          <div className="flex items-center gap-1 text-red-400">
-            <MinusCircle className="w-3.5 h-3.5" />
+          <div className="flex items-center gap-1 text-red-400 font-semibold">
             <span>-{deletions}</span>
           </div>
 
@@ -85,7 +80,7 @@ export default function PRReviewSummaryCard({
                 criticalIssuesCount > 0 ? "text-red-400 font-bold" : "text-yellow-400"
               }`}
             >
-              <AlertTriangle className="w-3.5 h-3.5" />
+              <AlertCircle className="w-3.5 h-3.5" />
               <span>{issuesCount} issues</span>
             </div>
           ) : (
