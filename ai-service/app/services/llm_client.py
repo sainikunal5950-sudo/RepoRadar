@@ -47,6 +47,16 @@ class LLMClient:
             from anthropic import AsyncAnthropic
             self.anthropic_client = AsyncAnthropic(api_key=settings.ANTHROPIC_API_KEY)
 
+    def get_openai_client(self):
+        from app.config import get_current_settings
+        cfg = get_current_settings()
+        if not cfg.OPENAI_API_KEY or cfg.OPENAI_API_KEY.startswith("mock-"):
+            return None
+        from openai import AsyncOpenAI
+        if self.openai_client is None or getattr(self.openai_client, "api_key", None) != cfg.OPENAI_API_KEY:
+            self.openai_client = AsyncOpenAI(api_key=cfg.OPENAI_API_KEY)
+        return self.openai_client
+
     @retry(
         stop=stop_after_attempt(3),
         wait=wait_exponential(multiplier=1, min=2, max=10),
@@ -80,10 +90,11 @@ class LLMClient:
 
         else:
             # Default to OpenAI
-            if not self.openai_client:
+            client = self.get_openai_client()
+            if not client:
                 raise RuntimeError("OpenAI API key is not configured")
 
-            response = await self.openai_client.chat.completions.create(
+            response = await client.chat.completions.create(
                 model=self.model,
                 messages=[
                     {"role": "system", "content": system_prompt},
@@ -130,7 +141,8 @@ class LLMClient:
             )
             return response.content[0].text
         else:
-            if not self.openai_client:
+            client = self.get_openai_client()
+            if not client:
                 raise RuntimeError("OpenAI API key is not configured")
 
             openai_messages = [{"role": "system", "content": system_prompt}]
@@ -138,7 +150,7 @@ class LLMClient:
                 if m.get("content"):
                     openai_messages.append({"role": m["role"], "content": m["content"]})
 
-            response = await self.openai_client.chat.completions.create(
+            response = await client.chat.completions.create(
                 model=self.model,
                 messages=openai_messages,
                 max_tokens=tokens,

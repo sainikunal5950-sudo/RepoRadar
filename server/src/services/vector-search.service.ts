@@ -123,17 +123,22 @@ export class VectorSearchService {
       const rawResults = await cursor.toArray();
 
       if (rawResults && rawResults.length > 0) {
-        const results: CodeSearchResultItem[] = rawResults.map((doc: any) => ({
-          id: doc._id?.toString() || "",
-          file_path: doc.file_path,
-          start_line: doc.start_line,
-          end_line: doc.end_line,
-          chunk_text: doc.chunk_text,
-          chunk_type: doc.chunk_type || "block",
-          chunk_label: doc.chunk_label || doc.file_path,
-          language: doc.language || null,
-          score: Math.max(0, Math.min(1, typeof doc.score === "number" ? doc.score : 0.8)),
-        }));
+        const isJunkPath = (path: string) =>
+          /(site-packages|\.pytest_cache|__pycache__|\.venv|venv\/|\.pyc$|\.pyo$|\.rst$|\.lock$)/i.test(path);
+
+        const results: CodeSearchResultItem[] = rawResults
+          .filter((doc: any) => !isJunkPath(doc.file_path || ""))
+          .map((doc: any) => ({
+            id: doc._id?.toString() || "",
+            file_path: doc.file_path,
+            start_line: doc.start_line,
+            end_line: doc.end_line,
+            chunk_text: doc.chunk_text,
+            chunk_type: doc.chunk_type || "block",
+            chunk_label: doc.chunk_label || doc.file_path,
+            language: doc.language || null,
+            score: Math.max(0, Math.min(1, typeof doc.score === "number" ? doc.score : 0.8)),
+          }));
 
         return {
           query: queryText.trim(),
@@ -186,7 +191,11 @@ export class VectorSearchService {
       };
     }
 
+    const isJunkPath = (path: string) =>
+      /(site-packages|\.pytest_cache|__pycache__|\.venv|venv\/|\.pyc$|\.pyo$|\.rst$|\.lock$)/i.test(path);
+
     const scoredDocs = docs
+      .filter((doc) => !isJunkPath(doc.file_path || ""))
       .map((doc) => {
         const sim = calculateCosineSimilarity(queryVector, doc.embedding || []);
         return {

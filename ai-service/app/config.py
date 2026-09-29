@@ -23,7 +23,11 @@ class Settings(BaseSettings):
         "http://localhost:3000",
     ]
 
-    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
+
+
+def get_current_settings() -> Settings:
+    return Settings(_env_file=".env")
 
 
 settings = Settings()

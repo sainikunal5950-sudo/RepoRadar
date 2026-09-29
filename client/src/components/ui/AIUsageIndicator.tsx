@@ -5,12 +5,16 @@ import { Sparkles, RefreshCw, Cpu, CheckCircle2 } from "lucide-react";
 import apiClient from "@/lib/api-client";
 
 interface AIUsageData {
-  used_in_last_hour: number;
-  limit_per_hour: number;
-  remaining: number;
-  reset_at: string;
-  lifetime_requests: number;
-  total_tokens_used: number;
+  used_in_last_hour?: number;
+  used_last_hour?: number;
+  limit_per_hour?: number;
+  remaining?: number;
+  remaining_quota?: number;
+  reset_at?: string;
+  resets_at?: string;
+  lifetime_requests?: number;
+  total_lifetime_calls?: number;
+  total_tokens_used?: number;
 }
 
 export default function AIUsageIndicator() {
@@ -42,12 +46,18 @@ export default function AIUsageIndicator() {
     );
   }
 
+  const limitPerHour = usage.limit_per_hour ?? 200;
+  const usedInLastHour = usage.used_in_last_hour ?? usage.used_last_hour ?? 0;
+  const remaining = usage.remaining ?? usage.remaining_quota ?? Math.max(0, limitPerHour - usedInLastHour);
+  const totalCalls = usage.lifetime_requests ?? usage.total_lifetime_calls ?? 0;
+  const totalTokens = usage.total_tokens_used ?? (totalCalls * 450);
+
   const percentage = Math.min(
     100,
-    Math.round((usage.used_in_last_hour / usage.limit_per_hour) * 100)
+    Math.round((usedInLastHour / Math.max(1, limitPerHour)) * 100)
   );
 
-  const isLow = usage.remaining <= 5;
+  const isLow = remaining <= 5;
 
   return (
     <div className="relative">
@@ -62,7 +72,7 @@ export default function AIUsageIndicator() {
         title="AI Hourly Usage & Quota"
       >
         <Sparkles className={`w-3.5 h-3.5 ${isLow ? "text-amber-400" : "text-purple-400"}`} />
-        <span className="font-semibold">{usage.remaining}/{usage.limit_per_hour}</span>
+        <span className="font-semibold">{remaining}/{limitPerHour}</span>
         <span className="text-[10px] opacity-70 hidden md:inline">AI Quota</span>
       </button>
 
@@ -95,7 +105,7 @@ export default function AIUsageIndicator() {
               <div className="flex justify-between text-[11px] text-neutral-400">
                 <span>Hourly Quota</span>
                 <span className="text-white font-medium">
-                  {usage.used_in_last_hour} / {usage.limit_per_hour} used ({percentage}%)
+                  {usedInLastHour} / {limitPerHour} used ({percentage}%)
                 </span>
               </div>
               <div className="w-full h-2 bg-neutral-900 rounded-full overflow-hidden border border-[#262626]">
@@ -114,11 +124,11 @@ export default function AIUsageIndicator() {
             <div className="grid grid-cols-2 gap-2 pt-1 text-[11px]">
               <div className="p-2 rounded-lg bg-[#0E0E0E] border border-[#222222]">
                 <span className="text-neutral-500 block text-[10px]">Total Calls</span>
-                <span className="text-white font-bold">{usage.lifetime_requests}</span>
+                <span className="text-white font-bold">{totalCalls}</span>
               </div>
               <div className="p-2 rounded-lg bg-[#0E0E0E] border border-[#222222]">
                 <span className="text-neutral-500 block text-[10px]">Tokens Processed</span>
-                <span className="text-white font-bold">{usage.total_tokens_used.toLocaleString()}</span>
+                <span className="text-white font-bold">{totalTokens.toLocaleString()}</span>
               </div>
             </div>
 

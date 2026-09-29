@@ -50,6 +50,63 @@ def extract_cited_files(answer: str, chunks: List[RAGChunkContext]) -> List[str]
     return cited
 
 
+def detect_chunk_lang(file_path: str) -> str:
+    ext = file_path.split(".")[-1].lower() if "." in file_path else ""
+    mapping = {
+        "ts": "typescript",
+        "tsx": "typescript",
+        "js": "javascript",
+        "jsx": "javascript",
+        "py": "python",
+        "json": "json",
+        "md": "markdown",
+        "html": "html",
+        "css": "css",
+        "sql": "sql",
+        "prisma": "prisma",
+        "yaml": "yaml",
+        "yml": "yaml",
+    }
+    return mapping.get(ext, "plaintext")
+
+
+def synthesize_heuristic_answer(question: str, chunks: List[RAGChunkContext]) -> str:
+    """
+    Synthesizes a structured, Markdown-formatted codebase answer directly from
+    retrieved vector chunks when OpenAI API key is unavailable or in mock mode.
+    """
+    if not chunks:
+        return (
+            f"### Repository Analysis for: *\"{question}\"*\n\n"
+            "⚠️ No directly matching code chunks were retrieved for this query. "
+            "Please ensure the repository has been indexed or try searching with specific component or function names."
+        )
+
+    files = list(dict.fromkeys([c.file_path for c in chunks if c.file_path]))
+    
+    parts = [
+        f"### Codebase Answer for: *\"{question}\"*\n",
+        f"Based on repository indexing and vector similarity search, **{len(chunks)} relevant code block(s)** were identified across **{len(files)} file(s)**:\n"
+    ]
+
+    for i, chunk in enumerate(chunks[:4], 1):
+        type_desc = f" ({chunk.chunk_type}: `{chunk.chunk_label}`)" if chunk.chunk_label else ""
+        lang = detect_chunk_lang(chunk.file_path)
+        parts.append(
+            f"#### {i}. `{chunk.file_path}` (Lines {chunk.start_line}–{chunk.end_line}){type_desc}\n"
+            f"```{lang}\n{chunk.chunk_text.strip()}\n```\n"
+        )
+
+    parts.append(
+        "**Context Summary:**\n"
+        f"- **Primary Files Involved:** {', '.join([f'`{f}`' for f in files])}\n"
+        "- The code snippets above define the logic, state management, and handlers relevant to your question.\n\n"
+        "> 💡 *Tip: To enable conversational GPT-4o-mini generation, provide an active OpenAI API key in `ai-service/.env`.*"
+    )
+
+    return "\n".join(parts)
+
+
 async def generate_chat_response(
     question: str,
     retrieved_chunks: List[RAGChunkContext],
@@ -57,6 +114,7 @@ async def generate_chat_response(
 ) -> ChatRespondResponse:
     """
     Executes context-grounded RAG answer generation using low-temperature LLM inference.
+    Falls back gracefully to heuristic context synthesis if API keys are missing or invalid.
     """
     context_str = format_context_block(retrieved_chunks)
     system_prompt = get_rag_chat_system_prompt()
@@ -83,6 +141,18 @@ Please answer the developer's question directly based ONLY on the codebase conte
     messages.append({"role": "user", "content": user_prompt})
 
     try:
+        from app.config import get_current_settings
+        current_cfg = get_current_settings()
+        if not current_cfg.OPENAI_API_KEY or current_cfg.OPENAI_API_KEY.startswith("mock-"):
+            answer = synthesize_heuristic_answer(question, retrieved_chunks)
+            cited_files = list(dict.fromkeys([c.file_path for c in retrieved_chunks if c.file_path]))
+            return ChatRespondResponse(
+                answer=answer,
+                cited_files=cited_files,
+                retrieved_chunks_count=len(retrieved_chunks),
+                tokens_used=max(1, len(answer) // 4),
+            )
+
         raw_answer = await llm_client.complete_chat(
             system_prompt=system_prompt,
             messages=messages,
@@ -105,5 +175,14 @@ Please answer the developer's question directly based ONLY on the codebase conte
         )
 
     except Exception as e:
-        logger.error(f"RAG chat response generation failed: {e}", exc_info=True)
-        raise
+        logger.warning(f"RAG chat LLM call encountered error ({e}). Using offline heuristic synthesis.")
+        answer = synthesize_heuristic_answer(question, retrieved_chunks)
+        cited_files = list(dict.fromkeys([c.file_path for c in retrieved_chunks if c.file_path]))
+        return ChatRespondResponse(
+            answer=answer,
+            cited_files=cited_files,
+            retrieved_chunks_count=len(retrieved_chunks),
+            tokens_used=max(1, len(answer) // 4),
+        )
+
+

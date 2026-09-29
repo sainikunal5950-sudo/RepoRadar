@@ -2,6 +2,12 @@
 node_modules/
 .pnp
 .pnp.js
+venv/
+.venv/
+ai-service/venv/
+__pycache__/
+*.py[cod]
+
 
 # Next.js Build Output
 .next/

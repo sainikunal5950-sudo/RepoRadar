@@ -2,7 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
-import { useSession, signOut } from "next-auth/react";
+import { useSession, signOut, signIn } from "next-auth/react";
 import {
   ShieldAlert,
   Activity,
@@ -133,20 +133,31 @@ export default function HomePage() {
 
           {/* Hero CTAs */}
           <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
-            <button
-              type="button"
+            <Link
+              href={isAuthenticated ? "/dashboard" : "/register"}
               className="w-full sm:w-auto px-7 py-3.5 rounded-xl bg-white text-black font-semibold text-base transition-all duration-300 hover:bg-neutral-100 hover:scale-[1.02] hover:shadow-[0_0_30px_rgba(255,255,255,0.4)] active:scale-[0.98] flex items-center justify-center gap-2 group cursor-pointer"
             >
               Get Started Free
               <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-            </button>
-            <button
-              type="button"
-              className="w-full sm:w-auto px-7 py-3.5 rounded-xl bg-[#141414] hover:bg-[#1A1A1A] border border-[#262626] hover:border-neutral-500 text-neutral-200 font-medium text-base transition-all duration-200 flex items-center justify-center gap-2.5 cursor-pointer"
-            >
-              <Github className="w-4 h-4" />
-              Connect GitHub Repository
-            </button>
+            </Link>
+            {isAuthenticated ? (
+              <Link
+                href="/dashboard/repositories"
+                className="w-full sm:w-auto px-7 py-3.5 rounded-xl bg-[#141414] hover:bg-[#1A1A1A] border border-[#262626] hover:border-neutral-500 text-neutral-200 font-medium text-base transition-all duration-200 flex items-center justify-center gap-2.5 cursor-pointer"
+              >
+                <Github className="w-4 h-4" />
+                Explore Repositories
+              </Link>
+            ) : (
+              <button
+                type="button"
+                onClick={() => signIn("github", { callbackUrl: "/dashboard" })}
+                className="w-full sm:w-auto px-7 py-3.5 rounded-xl bg-[#141414] hover:bg-[#1A1A1A] border border-[#262626] hover:border-neutral-500 text-neutral-200 font-medium text-base transition-all duration-200 flex items-center justify-center gap-2.5 cursor-pointer"
+              >
+                <Github className="w-4 h-4" />
+                Connect GitHub Repository
+              </button>
+            )}
           </div>
 
           {/* Trust proof */}
@@ -300,12 +311,12 @@ export default function HomePage() {
               Get comprehensive visibility into code quality, security vulnerabilities, and architectural health today.
             </p>
             <div className="relative mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
-              <button
-                type="button"
-                className="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-white text-black font-semibold text-base transition-all duration-200 hover:bg-neutral-200 hover:shadow-[0_0_25px_rgba(255,255,255,0.4)]"
+              <Link
+                href={isAuthenticated ? "/dashboard" : "/login"}
+                className="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-white text-black font-semibold text-base transition-all duration-200 hover:bg-neutral-200 hover:shadow-[0_0_25px_rgba(255,255,255,0.4)] inline-flex items-center justify-center cursor-pointer"
               >
                 Launch RepoRadar
-              </button>
+              </Link>
             </div>
           </div>
         </section>

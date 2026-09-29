@@ -102,10 +102,6 @@ app.include_router(
     dependencies=[Depends(verify_api_key)],
 )
 
-
-
-
-
 @app.get("/")
 async def root():
     return {
@@ -113,3 +109,4 @@ async def root():
         "status": "online",
         "docs": "/docs",
     }
+
