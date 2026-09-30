@@ -24,11 +24,20 @@ interface CodeFileToProcess {
   file_size: number;
 }
 
-// Ignore files that are pure lockfiles, large data files, minified bundles, or test cache
 const IGNORED_PATH_PATTERNS = [
+  /(^|\/)node_modules(\/|$)/i,
+  /(^|\/)\.next(\/|$)/i,
+  /(^|\/)dist(\/|$)/i,
+  /(^|\/)build(\/|$)/i,
+  /(^|\/)venv(\/|$)/i,
+  /(^|\/)\.venv(\/|$)/i,
+  /(^|\/)__pycache__(\/|$)/i,
+  /(^|\/)\.pytest_cache(\/|$)/i,
+  /(^|\/)site-packages(\/|$)/i,
   /package-lock\.json$/i,
   /yarn\.lock$/i,
   /pnpm-lock\.yaml$/i,
+  /bun\.lockb$/i,
   /\.min\.js$/i,
   /\.min\.css$/i,
   /\.map$/i,
@@ -36,8 +45,6 @@ const IGNORED_PATH_PATTERNS = [
   /\.png$/i,
   /\.jpg$/i,
   /\.ico$/i,
-  /\.pytest_cache/i,
-  /__pycache__/i,
   /\.rst$/i,
   /\.pyc$/i,
 ];

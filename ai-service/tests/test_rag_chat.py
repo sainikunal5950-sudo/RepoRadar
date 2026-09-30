@@ -167,3 +167,31 @@ def test_expand_query_endpoint_success(mock_expand):
     assert data["original_query"] == "how are tokens checked?"
     assert data["expanded_query"] == "jwt token verification authorization"
 
+
+def test_strip_code_blocks():
+    from app.services.rag_chat import strip_code_blocks
+    raw = "Here is the explanation:\n```typescript\nconst a = 10;\n```\nIt works by validating input."
+    cleaned = strip_code_blocks(raw)
+    assert "```" not in cleaned
+    assert "const a = 10;" not in cleaned
+    assert "Here is the explanation:" in cleaned
+    assert "It works by validating input." in cleaned
+
+
+def test_synthesize_heuristic_answer_no_code_blocks():
+    from app.services.rag_chat import synthesize_heuristic_answer
+    chunks = [
+        RAGChunkContext(
+            file_path="src/auth.ts",
+            start_line=1,
+            end_line=20,
+            chunk_text="export function auth() { return true; }",
+            chunk_type="function",
+            chunk_label="auth",
+        )
+    ]
+    answer = synthesize_heuristic_answer("Explain auth", chunks)
+    assert "```" not in answer
+    assert "export function auth" not in answer
+    assert "src/auth.ts" in answer
+

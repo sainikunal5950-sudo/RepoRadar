@@ -48,6 +48,8 @@ class LLMClient:
             self.anthropic_client = AsyncAnthropic(api_key=settings.ANTHROPIC_API_KEY)
 
     def get_openai_client(self):
+        if getattr(self, "_openai_disabled", False):
+            return None
         from app.config import get_current_settings
         cfg = get_current_settings()
         if not cfg.OPENAI_API_KEY or cfg.OPENAI_API_KEY.startswith("mock-"):
@@ -57,11 +59,6 @@ class LLMClient:
             self.openai_client = AsyncOpenAI(api_key=cfg.OPENAI_API_KEY)
         return self.openai_client
 
-    @retry(
-        stop=stop_after_attempt(3),
-        wait=wait_exponential(multiplier=1, min=2, max=10),
-        reraise=True,
-    )
     async def complete(
         self,
         system_prompt: str,
@@ -70,7 +67,7 @@ class LLMClient:
         temperature: Optional[float] = None,
     ) -> str:
         """
-        Executes a prompt completion with exponential backoff retries.
+        Executes a prompt completion.
         """
         tokens = max_tokens or settings.MAX_TOKENS
         temp = temperature if temperature is not None else settings.TEMPERATURE
@@ -92,24 +89,25 @@ class LLMClient:
             # Default to OpenAI
             client = self.get_openai_client()
             if not client:
-                raise RuntimeError("OpenAI API key is not configured")
+                raise RuntimeError("OpenAI API key is not configured or quota exhausted")
 
-            response = await client.chat.completions.create(
-                model=self.model,
-                messages=[
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": user_prompt},
-                ],
-                max_tokens=tokens,
-                temperature=temp,
-            )
-            return response.choices[0].message.content or ""
+            try:
+                response = await client.chat.completions.create(
+                    model=self.model,
+                    messages=[
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": user_prompt},
+                    ],
+                    max_tokens=tokens,
+                    temperature=temp,
+                )
+                return response.choices[0].message.content or ""
+            except Exception as e:
+                err_str = str(e).lower()
+                if "429" in err_str or "quota" in err_str or "credit" in err_str:
+                    self._openai_disabled = True
+                raise
 
-    @retry(
-        stop=stop_after_attempt(3),
-        wait=wait_exponential(multiplier=1, min=2, max=10),
-        reraise=True,
-    )
     async def complete_chat(
         self,
         system_prompt: str,
@@ -118,7 +116,7 @@ class LLMClient:
         temperature: Optional[float] = None,
     ) -> str:
         """
-        Executes multi-turn conversation completion with exponential backoff retries.
+        Executes multi-turn conversation completion.
         """
         tokens = max_tokens or settings.MAX_TOKENS
         temp = temperature if temperature is not None else settings.TEMPERATURE
@@ -143,20 +141,27 @@ class LLMClient:
         else:
             client = self.get_openai_client()
             if not client:
-                raise RuntimeError("OpenAI API key is not configured")
+                raise RuntimeError("OpenAI API key is not configured or quota exhausted")
 
             openai_messages = [{"role": "system", "content": system_prompt}]
             for m in messages:
                 if m.get("content"):
                     openai_messages.append({"role": m["role"], "content": m["content"]})
 
-            response = await client.chat.completions.create(
-                model=self.model,
-                messages=openai_messages,
-                max_tokens=tokens,
-                temperature=temp,
-            )
-            return response.choices[0].message.content or ""
+            try:
+                response = await client.chat.completions.create(
+                    model=self.model,
+                    messages=openai_messages,
+                    max_tokens=tokens,
+                    temperature=temp,
+                )
+                return response.choices[0].message.content or ""
+            except Exception as e:
+                err_str = str(e).lower()
+                if "429" in err_str or "quota" in err_str or "credit" in err_str:
+                    self._openai_disabled = True
+                raise
+
 
     async def complete_json(
         self,

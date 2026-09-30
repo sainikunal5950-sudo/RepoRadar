@@ -103,26 +103,30 @@ class EmbeddingService:
             return generate_pseudo_embedding(sanitized, self.dimensions)
 
         # OpenAI provider
-        if not self.openai_client:
-            if settings.OPENAI_API_KEY and not settings.OPENAI_API_KEY.startswith("mock-"):
+        if not getattr(self, "_openai_disabled", False):
+            if not self.openai_client:
+                if settings.OPENAI_API_KEY and not settings.OPENAI_API_KEY.startswith("mock-"):
+                    try:
+                        from openai import AsyncOpenAI
+                        self.openai_client = AsyncOpenAI(api_key=settings.OPENAI_API_KEY)
+                    except Exception:
+                        pass
+
+            if self.openai_client and settings.OPENAI_API_KEY and not settings.OPENAI_API_KEY.startswith("mock-"):
                 try:
-                    from openai import AsyncOpenAI
-                    self.openai_client = AsyncOpenAI(api_key=settings.OPENAI_API_KEY)
-                except Exception:
-                    pass
+                    response = await self.openai_client.embeddings.create(
+                        input=sanitized,
+                        model=self.model,
+                    )
+                    return response.data[0].embedding
+                except Exception as e:
+                    err_str = str(e).lower()
+                    if "429" in err_str or "quota" in err_str or "credit" in err_str:
+                        self._openai_disabled = True
+                    logger.warning(f"OpenAI embedding call failed ({e}). Using deterministic pseudo-embedding fallback.")
+                    return generate_pseudo_embedding(sanitized, self.dimensions)
 
-        if self.openai_client and settings.OPENAI_API_KEY and not settings.OPENAI_API_KEY.startswith("mock-"):
-            try:
-                response = await self.openai_client.embeddings.create(
-                    input=sanitized,
-                    model=self.model,
-                )
-                return response.data[0].embedding
-            except Exception as e:
-                logger.warning(f"OpenAI embedding call failed ({e}). Using deterministic pseudo-embedding fallback.")
-                return generate_pseudo_embedding(sanitized, self.dimensions)
-
-        # Fallback when key is mock or unconfigured
+        # Fallback when key is mock, quota-exhausted, or unconfigured
         return generate_pseudo_embedding(sanitized, self.dimensions)
 
     async def generate_embeddings_batch(self, texts: List[str]) -> List[List[float]]:
@@ -149,27 +153,31 @@ class EmbeddingService:
             return [generate_pseudo_embedding(t, self.dimensions) for t in processed_texts]
 
         # OpenAI batch
-        if not self.openai_client:
-            if settings.OPENAI_API_KEY and not settings.OPENAI_API_KEY.startswith("mock-"):
+        if not getattr(self, "_openai_disabled", False):
+            if not self.openai_client:
+                if settings.OPENAI_API_KEY and not settings.OPENAI_API_KEY.startswith("mock-"):
+                    try:
+                        from openai import AsyncOpenAI
+                        self.openai_client = AsyncOpenAI(api_key=settings.OPENAI_API_KEY)
+                    except Exception:
+                        pass
+
+            if self.openai_client and settings.OPENAI_API_KEY and not settings.OPENAI_API_KEY.startswith("mock-"):
                 try:
-                    from openai import AsyncOpenAI
-                    self.openai_client = AsyncOpenAI(api_key=settings.OPENAI_API_KEY)
-                except Exception:
-                    pass
+                    response = await self.openai_client.embeddings.create(
+                        input=processed_texts,
+                        model=self.model,
+                    )
+                    sorted_data = sorted(response.data, key=lambda x: x.index)
+                    return [item.embedding for item in sorted_data]
+                except Exception as e:
+                    err_str = str(e).lower()
+                    if "429" in err_str or "quota" in err_str or "credit" in err_str:
+                        self._openai_disabled = True
+                    logger.warning(f"OpenAI batch embedding call failed ({e}). Using deterministic pseudo-embedding fallback.")
+                    return [generate_pseudo_embedding(t, self.dimensions) for t in processed_texts]
 
-        if self.openai_client and settings.OPENAI_API_KEY and not settings.OPENAI_API_KEY.startswith("mock-"):
-            try:
-                response = await self.openai_client.embeddings.create(
-                    input=processed_texts,
-                    model=self.model,
-                )
-                sorted_data = sorted(response.data, key=lambda x: x.index)
-                return [item.embedding for item in sorted_data]
-            except Exception as e:
-                logger.warning(f"OpenAI batch embedding call failed ({e}). Using deterministic pseudo-embedding fallback.")
-                return [generate_pseudo_embedding(t, self.dimensions) for t in processed_texts]
-
-        # Fallback when key is mock or unconfigured
+        # Fallback when key is mock, quota-exhausted, or unconfigured
         return [generate_pseudo_embedding(t, self.dimensions) for t in processed_texts]
 
 
